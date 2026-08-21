@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AppFunctionAppMetadata xmlns:appfn="http://schemas.android.com/apk/androidx.appfunctions"
+    appfn:description="RealtyNova is a real estate application that allows users to search for properties, view property details, and schedule viewings.
+    Operational Patterns:
+    - Use 'searchProperties' to find properties based on location, price, and type.
+    - Use 'getPropertyDetails' with a specific 'propertyId' to get comprehensive information about a listing.
+    - Use 'scheduleViewing' to book a tour for a specific property using its 'propertyId'.
+    Constraints:
+    - Scheduling requires a valid property ID obtained from search results."
+    appfn:displayDescription="RealtyNova Real Estate Assistant" />

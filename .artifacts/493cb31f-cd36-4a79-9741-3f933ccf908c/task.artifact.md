@@ -1,0 +1,3 @@
+- [x] Fix repository configuration in `settings.gradle.kts`
+- [/] Finalize migration to KSP in `app/build.gradle.kts`
+- [ ] Run Gradle Sync and verify build
