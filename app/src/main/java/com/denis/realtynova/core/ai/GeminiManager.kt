@@ -4,8 +4,7 @@ import com.denis.realtynova.BuildConfig
 import com.denis.realtynova.core.domain.model.Property
 import com.google.firebase.vertexai.FirebaseVertexAI
 import com.google.firebase.vertexai.type.content
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -13,29 +12,50 @@ import javax.inject.Singleton
 class GeminiManager @Inject constructor() {
     private val model = FirebaseVertexAI.instance.generativeModel("gemini-1.5-flash")
     
-    private val chat = model.startChat()
+    // Use a managed chat session for context persistence
+    private var chatSession = model.startChat()
 
     suspend fun generateResponse(userPrompt: String, propertiesContext: List<Property>): String {
+        val contextInfo = if (propertiesContext.isNotEmpty()) {
+            "Available Properties for this user's context:\n" + 
+            propertiesContext.joinToString("\n") { 
+                "• ${it.title} (${it.type}) in ${it.location} - ${it.currency} ${it.price}. Listing Type: ${it.listingType}" 
+            }
+        } else {
+            "No specific property listings are currently in view, but you can suggest general luxury areas in Kenya like Karen, Muthaiga, or Westlands."
+        }
+
         val systemPrompt = """
-            You are RealtyNova AI, a luxury property concierge in Kenya. 
-            You help users find their dream homes.
+            You are RealtyNova AI, the world's most sophisticated luxury property concierge based in Nairobi, Kenya.
+            Your personality: Elegant, knowledgeable, discreet, and highly efficient.
             
-            Available Properties for this user's context:
-            ${propertiesContext.joinToString("\n") { "${it.title} in ${it.location} for ${it.currency} ${it.price}" }}
+            $contextInfo
             
-            Instructions:
-            1. Be professional, sophisticated, and helpful.
-            2. If you find matching properties in the context, mention them specifically.
-            3. If you don't find exact matches, suggest the closest alternatives.
-            4. Keep responses concise and focused on property discovery.
+            Your Goals:
+            1. Help the user discover premium real estate that matches their lifestyle.
+            2. Provide insights into Kenyan neighborhoods (security, amenities, schools).
+            3. Act as a bridge between the user and our premium agents.
+            
+            Guidelines:
+            - Use professional yet inviting language.
+            - If matching properties exist, prioritize them but explain WHY they fit the user's request.
+            - Format prices clearly (e.g., KSh 150M).
+            - If you don't know something, offer to connect them with a human specialist.
         """.trimIndent()
 
-        val response = chat.sendMessage(
-            content {
-                text(systemPrompt)
-                text(userPrompt)
-            }
-        )
-        return response.text ?: "I'm sorry, I couldn't process that request. How else can I help you find a property today?"
+        return try {
+            val response = chatSession.sendMessage(
+                content {
+                    text(systemPrompt)
+                    text(userPrompt)
+                }
+            )
+            response.text ?: "I'm refining my search for you. Could you provide more details about your preferred location?"
+        } catch (e: Exception) {
+            Timber.e(e, "Gemini generation failed")
+            // Reset chat session on critical error to prevent stale state
+            chatSession = model.startChat()
+            "I'm currently experiencing a high volume of requests. Please tell me a bit more about the type of property you are looking for, and I'll get back to you shortly."
+        }
     }
 }
