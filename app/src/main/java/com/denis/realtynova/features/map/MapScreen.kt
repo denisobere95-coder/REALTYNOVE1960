@@ -40,10 +40,13 @@ import com.denis.realtynova.core.designsystem.theme.ChampagneGold
 import com.denis.realtynova.core.designsystem.theme.RealtyNovaTextStyles
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.maps.android.compose.*
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 private val NairobiCenter = LatLng(-1.286389, 36.817223)
+private val SchoolLocation = LatLng(-1.3093, 36.8125) // Strathmore University example
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +64,7 @@ fun MapScreen(
     
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val scope = rememberCoroutineScope()
 
     val initialLocation = remember(uiState.properties) {
         uiState.properties.firstOrNull()?.let { LatLng(it.latitude, it.longitude) } ?: NairobiCenter
@@ -80,8 +84,24 @@ fun MapScreen(
             ),
             uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false, compassEnabled = false, mapToolbarEnabled = false),
             onMapLoaded = { mapReady = true },
-            onMapClick = { viewModel.onPropertySelected(null) }
+            onMapClick = { latLng ->
+                viewModel.onPropertySelected(null)
+                scope.launch {
+                    cameraPositionState.animate(
+                        com.google.android.gms.maps.CameraUpdateFactory.newLatLng(latLng),
+                        1000
+                    )
+                }
+            }
         ) {
+            // School Marker
+            Marker(
+                state = rememberMarkerState(position = SchoolLocation),
+                title = "Strathmore University",
+                snippet = "Academic Hotspot",
+                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+            )
+
             uiState.properties.forEach { property ->
                 val markerState = remember(property.id) {
                     MarkerState(position = LatLng(property.latitude, property.longitude))
@@ -126,8 +146,7 @@ fun MapScreen(
                 cameraPositionState.move(com.google.android.gms.maps.CameraUpdateFactory.zoomOut())
             },
             onMyLocation = {
-                val target = uiState.selectedProperty?.let { LatLng(it.latitude, it.longitude) } ?: NairobiCenter
-                cameraPositionState.position = CameraPosition.fromLatLngZoom(target, 15f)
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(SchoolLocation, 16f)
             }
         )
 
@@ -372,7 +391,7 @@ private fun MapControls(
             shadowElevation = 8.dp
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(imageVector = Icons.Default.MyLocation, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+                Icon(imageVector = Icons.Default.School, contentDescription = "Jump to School", tint = Color.White, modifier = Modifier.size(22.dp))
             }
         }
     }

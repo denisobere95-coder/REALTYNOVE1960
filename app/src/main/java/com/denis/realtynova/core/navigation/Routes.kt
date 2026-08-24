@@ -2,7 +2,14 @@ package com.denis.realtynova.core.navigation
 
 import kotlinx.serialization.Serializable
 
+/**
+ * REALTYNOVA NAVIGATION SYSTEM
+ *
+ * All application routes must be defined here as @Serializable objects or classes.
+ * This ensures type-safety throughout the Compose Navigation graph.
+ */
 sealed interface Route {
+
     @Serializable
     data object Splash : Route
 
@@ -10,11 +17,8 @@ sealed interface Route {
     data object Onboarding : Route
 
     @Serializable
-    data object AuthGraph : Route
-    
-    @Serializable
     data object Welcome : Route
-    
+
     @Serializable
     data object Login : Route
 
@@ -29,9 +33,6 @@ sealed interface Route {
 
     @Serializable
     data object AccountType : Route
-    
-    @Serializable
-    data object MainGraph : Route
 
     @Serializable
     data object Home : Route
@@ -80,4 +81,25 @@ sealed interface Route {
 
     @Serializable
     data object EditProfile : Route
+
+    @Serializable
+    data object Notifications : Route
+
+    @Serializable
+    data object CountyExplorer : Route
+
+    @Serializable
+    data object MarketInsights : Route
+
+    @Serializable
+    data object MortgageCalculator : Route
+
+    @Serializable
+    data object Matchmaker : Route
+
+    @Serializable
+    data class VirtualTour(val propertyId: String) : Route
+
+    @Serializable
+    data class PropertyComparison(val propertyId1: String, val propertyId2: String) : Route
 }

@@ -1,11 +1,19 @@
 package com.denis.realtynova.features.auth
 
+import android.app.Activity
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.denis.realtynova.core.data.manager.SessionManager
 import com.denis.realtynova.core.domain.model.User
 import com.denis.realtynova.core.domain.model.UserRole
 import com.denis.realtynova.core.domain.repository.AuthRepository
+import com.denis.realtynova.core.util.GoogleAuthManager
+import com.google.firebase.FirebaseException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,13 +21,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val googleAuthManager: GoogleAuthManager
 ) : ViewModel() {
+
+    private val firebaseAuth = FirebaseAuth.getInstance()
 
     val currentUser: StateFlow<User?> = authRepository.currentUser
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -40,6 +54,7 @@ class AuthViewModel @Inject constructor(
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
     private var _verificationId: String? = null
+    private var _resendToken: PhoneAuthProvider.ForceResendingToken? = null
 
     fun completeOnboarding() {
         viewModelScope.launch {
@@ -70,10 +85,10 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun signUp(email: String, password: String) {
+    fun signUp(name: String, email: String, password: String, phone: String) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
-            val result = authRepository.signUpWithEmail(email, password)
+            val result = authRepository.signUpWithEmail(email, password, phone, name)
             _uiState.value = result.fold(
                 onSuccess = { AuthUiState.Success(it) },
                 onFailure = { AuthUiState.Error(it.message ?: "Signup failed") }
@@ -81,42 +96,141 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun signInWithGoogle(idToken: String) {
+    fun signInWithGoogle(context: Context) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
-            val result = authRepository.signInWithGoogle(idToken)
-            _uiState.value = result.fold(
-                onSuccess = { AuthUiState.Success(it) },
-                onFailure = { AuthUiState.Error(it.message ?: "Google sign in failed") }
-            )
+            val idToken = googleAuthManager.signIn(context)
+            if (idToken != null) {
+                val result = authRepository.signInWithGoogle(idToken)
+                _uiState.value = result.fold(
+                    onSuccess = { AuthUiState.Success(it) },
+                    onFailure = { AuthUiState.Error(it.message ?: "Google sign in failed") }
+                )
+            } else {
+                _uiState.value = AuthUiState.Error("Google sign in cancelled or failed")
+            }
         }
     }
 
-    fun signInWithFacebook(token: String) {
-        viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
-            val result = authRepository.signInWithFacebook(token)
-            _uiState.value = result.fold(
-                onSuccess = { AuthUiState.Success(it) },
-                onFailure = { AuthUiState.Error(it.message ?: "Facebook sign in failed") }
-            )
+    fun sendOtpCode(activity: Activity, phoneNumber: String) {
+        val normalized = normalizeKenyanPhoneNumber(phoneNumber)
+        if (normalized == null) {
+            _uiState.value = AuthUiState.Error("Enter a valid Kenyan phone number.")
+            return
         }
+
+        _uiState.value = AuthUiState.Loading
+
+        val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+            override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                signInWithPhoneCredential(credential)
+            }
+
+            override fun onVerificationFailed(e: FirebaseException) {
+                _uiState.value = AuthUiState.Error(e.message ?: "Verification failed")
+            }
+
+            override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
+                _verificationId = verificationId
+                _resendToken = token
+                _uiState.value = AuthUiState.CodeSent(normalized)
+            }
+        }
+
+        val options = PhoneAuthOptions.newBuilder(firebaseAuth)
+            .setPhoneNumber(normalized)
+            .setTimeout(60L, TimeUnit.SECONDS)
+            .setActivity(activity)
+            .setCallbacks(callbacks)
+            .build()
+
+        PhoneAuthProvider.verifyPhoneNumber(options)
     }
 
-    fun setVerificationId(id: String) {
-        _verificationId = id
+    fun resendOtpCode(activity: Activity, phoneNumber: String) {
+        val normalized = normalizeKenyanPhoneNumber(phoneNumber) ?: return
+        val token = _resendToken ?: return
+
+        _uiState.value = AuthUiState.Loading
+
+        val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+            override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                signInWithPhoneCredential(credential)
+            }
+
+            override fun onVerificationFailed(e: FirebaseException) {
+                _uiState.value = AuthUiState.Error(e.message ?: "Verification failed")
+            }
+
+            override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
+                _verificationId = verificationId
+                _resendToken = token
+                _uiState.value = AuthUiState.CodeSent(normalized)
+            }
+        }
+
+        val options = PhoneAuthOptions.newBuilder(firebaseAuth)
+            .setPhoneNumber(normalized)
+            .setTimeout(60L, TimeUnit.SECONDS)
+            .setActivity(activity)
+            .setCallbacks(callbacks)
+            .setForceResendingToken(token)
+            .build()
+
+        PhoneAuthProvider.verifyPhoneNumber(options)
     }
 
-    fun signInWithPhone(phoneNumber: String, otp: String) {
+    fun verifyOtp(phoneNumber: String, code: String) {
         val verificationId = _verificationId ?: return
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
-            val result = authRepository.signInWithPhone(phoneNumber, verificationId, otp)
+            val result = authRepository.signInWithPhone(phoneNumber, verificationId, code)
             _uiState.value = result.fold(
                 onSuccess = { AuthUiState.Success(it) },
                 onFailure = { AuthUiState.Error(it.message ?: "Phone sign in failed") }
             )
         }
+    }
+
+    private fun signInWithPhoneCredential(credential: PhoneAuthCredential) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            try {
+                val result = firebaseAuth.signInWithCredential(credential).await()
+                val firebaseUser = result.user
+                if (firebaseUser != null) {
+                    val user = User(
+                        id = firebaseUser.uid,
+                        email = firebaseUser.email,
+                        phoneNumber = firebaseUser.phoneNumber,
+                        displayName = firebaseUser.displayName,
+                        photoUrl = firebaseUser.photoUrl?.toString()
+                    )
+                    _uiState.value = AuthUiState.Success(user)
+                } else {
+                    _uiState.value = AuthUiState.Error("User not found after sign in")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Phone sign in failed")
+                _uiState.value = AuthUiState.Error(e.message ?: "Sign in failed")
+            }
+        }
+    }
+
+    private fun normalizeKenyanPhoneNumber(input: String): String? {
+        val cleaned = input.trim().replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+        if (cleaned.isBlank()) return null
+
+        return when {
+            cleaned.startsWith("+254") -> if (cleaned.length == 13 && cleaned.substring(4).all { it.isDigit() }) cleaned else null
+            cleaned.startsWith("254") -> if (cleaned.length == 12 && cleaned.substring(3).all { it.isDigit() }) "+$cleaned" else null
+            cleaned.startsWith("0") -> if (cleaned.length == 10 && cleaned.all { it.isDigit() }) "+254${cleaned.substring(1)}" else null
+            else -> null
+        }
+    }
+
+    fun setVerificationId(id: String) {
+        _verificationId = id
     }
 
     fun setUserRole(role: UserRole) {
@@ -137,15 +251,11 @@ class AuthViewModel @Inject constructor(
         _uiState.value = AuthUiState.Idle
     }
 }
-sealed interface AuthState {
-    data object Loading : AuthState
-    data object Authenticated : AuthState
-    data object Unauthenticated : AuthState
-}
 
 sealed interface AuthUiState {
     data object Idle : AuthUiState
     data object Loading : AuthUiState
+    data class CodeSent(val phoneNumber: String) : AuthUiState
     data class Success(val user: User) : AuthUiState
     data class Error(val message: String) : AuthUiState
 }

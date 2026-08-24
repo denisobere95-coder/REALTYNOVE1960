@@ -104,20 +104,22 @@ fun SplashScreen(
                 )
         )
         // Architectural Background Rings
-        Canvas(modifier = Modifier.size(400.dp).alpha(0.15f * revealProgress.value)) {
-            val center = Offset(size.width / 2f, size.height / 2f)
-            drawCircle(
-                color = ChampagneGold,
-                radius = (size.minDimension / 2) * 0.8f,
-                style = Stroke(width = 1.dp.toPx()),
-                center = center
-            )
-            drawCircle(
-                color = Color.White,
-                radius = (size.minDimension / 2) * 0.6f,
-                style = Stroke(width = 0.5.dp.toPx()),
-                center = center
-            )
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Canvas(modifier = Modifier.size(400.dp).alpha(0.15f * revealProgress.value)) {
+                val center = Offset(size.width / 2f, size.height / 2f)
+                drawCircle(
+                    color = ChampagneGold,
+                    radius = (size.minDimension / 2) * 0.8f,
+                    style = Stroke(width = 1.dp.toPx()),
+                    center = center
+                )
+                drawCircle(
+                    color = Color.White,
+                    radius = (size.minDimension / 2) * 0.6f,
+                    style = Stroke(width = 0.5.dp.toPx()),
+                    center = center
+                )
+            }
         }
 
         // Shimmer Overlay
@@ -138,6 +140,7 @@ fun SplashScreen(
         )
 
         Column(
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {

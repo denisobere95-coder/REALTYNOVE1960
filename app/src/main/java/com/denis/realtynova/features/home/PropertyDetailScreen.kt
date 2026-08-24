@@ -1,7 +1,10 @@
 package com.denis.realtynova.features.home
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,9 +49,11 @@ fun PropertyDetailScreen(
     onBack: () -> Unit,
     onNavigateToBooking: (String) -> Unit = {},
     onNavigateToPayment: (String, Double) -> Unit = { _, _ -> },
+    onNavigateToVirtualTour: (String) -> Unit = {},
     viewModel: PropertyDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(id) {
         viewModel.loadProperty(id)
@@ -58,8 +63,16 @@ fun PropertyDetailScreen(
         bottomBar = {
             if (uiState.property != null) {
                 PropertyActionDock(
+                    isFavorite = uiState.isFavorite,
+                    onFavoriteClick = { viewModel.toggleFavorite() },
                     onBookingClick = { onNavigateToBooking(id) },
-                    onReserveClick = { onNavigateToPayment(id, uiState.property!!.price * 0.01) } // 1% reservation fee
+                    onReserveClick = { onNavigateToPayment(id, uiState.property!!.price * 0.01) },
+                    onCallClick = {
+                        val intent = Intent(Intent.ACTION_DIAL).apply {
+                            data = Uri.parse("tel:+254700000000")
+                        }
+                        context.startActivity(intent)
+                    }
                 )
             }
         }
@@ -70,7 +83,11 @@ fun PropertyDetailScreen(
                     CircularProgressIndicator(color = DeepEmerald)
                 }
             } else if (uiState.property != null) {
-                PropertyDetailContent(property = uiState.property!!, onBack = onBack)
+                PropertyDetailContent(
+                    property = uiState.property!!,
+                    onBack = onBack,
+                    onVrClick = { onNavigateToVirtualTour(id) }
+                )
             } else if (uiState.error != null) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = uiState.error!!, color = MaterialTheme.colorScheme.error)
@@ -81,10 +98,18 @@ fun PropertyDetailScreen(
 }
 
 @Composable
-fun PropertyDetailContent(property: Property, onBack: () -> Unit) {
+fun PropertyDetailContent(
+    property: Property,
+    onBack: () -> Unit,
+    onVrClick: () -> Unit
+) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
-            PropertyImageHeader(property = property, onBack = onBack)
+            PropertyImageHeader(
+                property = property,
+                onBack = onBack,
+                onVrClick = onVrClick
+            )
         }
         item {
             PropertyMainInfo(property = property)
@@ -111,7 +136,11 @@ fun PropertyDetailContent(property: Property, onBack: () -> Unit) {
 }
 
 @Composable
-fun PropertyImageHeader(property: Property, onBack: () -> Unit) {
+fun PropertyImageHeader(
+    property: Property,
+    onBack: () -> Unit,
+    onVrClick: () -> Unit
+) {
     val context = LocalContext.current
     val shimmerTranslate = rememberInfiniteTransition(label = "shimmer").animateFloat(
         initialValue = 0f,
@@ -171,18 +200,35 @@ fun PropertyImageHeader(property: Property, onBack: () -> Unit) {
             Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
         }
 
-        if (property.isPremium) {
+        Row(
+            modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Surface(
-                modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(16.dp),
+                modifier = Modifier.clickable { onVrClick() },
                 shape = RoundedCornerShape(12.dp),
-                color = ChampagneGold
+                color = Color.Black.copy(alpha = 0.6f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
             ) {
-                Text(
-                    text = "PREMIUM LISTING",
-                    style = RealtyNovaTextStyles.PremiumLabel,
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
-                )
+                Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.ViewInAr, null, tint = Color.White, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("360° TOUR", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            if (property.isPremium) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = ChampagneGold
+                ) {
+                    Text(
+                        text = "PREMIUM",
+                        style = RealtyNovaTextStyles.PremiumLabel,
+                        color = Color.White,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
+                    )
+                }
             }
         }
     }
@@ -388,23 +434,45 @@ fun PropertyMainInfo(property: Property) {
         
         if (property.yieldPercentage != null) {
             Spacer(modifier = Modifier.height(12.dp))
-            Surface(
-                shape = RoundedCornerShape(50),
-                color = Color(0xFFE8F5E9),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFA5D6A7))
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = Color(0xFFE8F5E9),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFA5D6A7))
                 ) {
-                    Icon(imageVector = Icons.Default.TrendingUp, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Estimated Yield: ${property.yieldPercentage}%",
-                        color = Color(0xFF1B5E20),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(imageVector = Icons.Default.TrendingUp, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Estimated Yield: ${property.yieldPercentage}%",
+                            color = Color(0xFF1B5E20),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = ChampagneGold.copy(alpha = 0.15f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, ChampagneGold)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = ChampagneGold, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Investment Score: 94/100",
+                            color = Color(0xFF634D00),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -486,8 +554,11 @@ fun PropertyAmenities(property: Property) {
 
 @Composable
 fun PropertyActionDock(
+    isFavorite: Boolean,
+    onFavoriteClick: () -> Unit,
     onBookingClick: () -> Unit,
-    onReserveClick: () -> Unit
+    onReserveClick: () -> Unit,
+    onCallClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
@@ -499,13 +570,28 @@ fun PropertyActionDock(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
+                modifier = Modifier.size(56.dp).border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.clickable { onCallClick() }) {
+                    Icon(imageVector = Icons.Default.Phone, contentDescription = "Call Agent", tint = DeepEmerald)
+                }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Surface(
                 modifier = Modifier.size(56.dp),
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                color = if (isFavorite) Color(0xFFFFEBEE) else MaterialTheme.colorScheme.surfaceVariant,
+                border = androidx.compose.foundation.BorderStroke(1.dp, if (isFavorite) Color(0xFFFFCDD2) else MaterialTheme.colorScheme.outlineVariant)
             ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.clickable { }) {
-                    Icon(imageVector = Icons.Default.FavoriteBorder, contentDescription = "Favorite", tint = DeepEmerald)
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.clickable { onFavoriteClick() }) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Favorite",
+                        tint = if (isFavorite) Color(0xFFD32F2F) else DeepEmerald
+                    )
                 }
             }
             Spacer(modifier = Modifier.width(12.dp))

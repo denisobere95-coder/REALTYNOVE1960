@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
@@ -69,21 +70,20 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun RegisterScreen(
-    onRegisterSuccessAction: () -> Unit,
+    onRegisterSuccessAction: (String, String, String, String) -> Unit,
     onLoginClickAction: () -> Unit,
+    onGoogleSignInAction: () -> Unit = {},
     onPhoneAuthClickAction: () -> Unit,
     onBackClickAction: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
 
     var passwordVisible by remember { mutableStateOf(false) }
     var showContent by remember { mutableStateOf(false) }
 
-    /*
-     * Entrance animation.
-     */
     val logoScale = remember {
         Animatable(0.82f)
     }
@@ -101,12 +101,6 @@ fun RegisterScreen(
         showContent = true
     }
 
-    /*
-     * Password strength.
-     *
-     * This is deliberately lightweight for MVP.
-     * The actual backend must perform the authoritative validation.
-     */
     val passwordScore = remember(password) {
         calculatePasswordScore(password)
     }
@@ -137,9 +131,6 @@ fun RegisterScreen(
                 )
         )
 
-        /*
-         * Back button.
-         */
         IconButton(
             onClick = onBackClickAction,
             modifier = Modifier
@@ -170,9 +161,6 @@ fun RegisterScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            /*
-             * REALTYNOVA logo container.
-             */
             Box(
                 modifier = Modifier
                     .size(74.dp)
@@ -240,9 +228,6 @@ fun RegisterScreen(
                         modifier = Modifier.padding(24.dp)
                     ) {
 
-                        /*
-                         * Header.
-                         */
                         Text(
                             text = "Create your account",
                             style = MaterialTheme.typography.headlineSmall,
@@ -263,9 +248,6 @@ fun RegisterScreen(
                             modifier = Modifier.height(26.dp)
                         )
 
-                        /*
-                         * Step indicator.
-                         */
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -312,9 +294,6 @@ fun RegisterScreen(
                             modifier = Modifier.height(28.dp)
                         )
 
-                        /*
-                         * Full name.
-                         */
                         RealtyNovaTextField(
                             value = name,
                             onValueChange = { name = it },
@@ -332,9 +311,26 @@ fun RegisterScreen(
                             modifier = Modifier.height(16.dp)
                         )
 
-                        /*
-                         * Email.
-                         */
+                        RealtyNovaTextField(
+                            value = phoneNumber,
+                            onValueChange = { phoneNumber = it },
+                            label = "Phone number",
+                            placeholder = "+254 7XX XXX XXX",
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Phone,
+                                    contentDescription = null
+                                )
+                            },
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone
+                            )
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(16.dp)
+                        )
+
                         RealtyNovaTextField(
                             value = email,
                             onValueChange = { email = it },
@@ -352,9 +348,6 @@ fun RegisterScreen(
                             modifier = Modifier.height(16.dp)
                         )
 
-                        /*
-                         * Password.
-                         */
                         RealtyNovaTextField(
                             value = password,
                             onValueChange = { password = it },
@@ -396,9 +389,6 @@ fun RegisterScreen(
                             }
                         )
 
-                        /*
-                         * Password strength.
-                         */
                         AnimatedVisibility(
                             visible = password.isNotEmpty()
                         ) {
@@ -438,9 +428,6 @@ fun RegisterScreen(
                             modifier = Modifier.height(22.dp)
                         )
 
-                        /*
-                         * Security promises.
-                         */
                         Column(
                             verticalArrangement = Arrangement.spacedBy(7.dp)
                         ) {
@@ -465,11 +452,8 @@ fun RegisterScreen(
                             modifier = Modifier.height(24.dp)
                         )
 
-                        /*
-                         * Main registration CTA.
-                         */
                         RealtyNovaButton(
-                            onClick = onRegisterSuccessAction,
+                            onClick = { onRegisterSuccessAction(name, email, password, phoneNumber) },
                             variant = ButtonVariant.Premium,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -486,9 +470,6 @@ fun RegisterScreen(
                             modifier = Modifier.height(20.dp)
                         )
 
-                        /*
-                         * Alternative authentication divider.
-                         */
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -524,15 +505,9 @@ fun RegisterScreen(
                         )
 
                         SocialAuthSection(
-                            onGoogleClick = {
-                                // Google authentication.
-                            },
-                            onFacebookClick = {
-                                // Facebook authentication.
-                            },
-                            onInstagramClick = {
-                                // Only expose if actually configured.
-                            },
+                            onGoogleClick = onGoogleSignInAction,
+                            onFacebookClick = { },
+                            onInstagramClick = { },
                             onPhoneClick = onPhoneAuthClickAction
                         )
 
@@ -540,9 +515,6 @@ fun RegisterScreen(
                             modifier = Modifier.height(24.dp)
                         )
 
-                        /*
-                         * Existing-account section.
-                         */
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center,
@@ -596,9 +568,6 @@ fun RegisterScreen(
     }
 }
 
-/*
- * Registration progress step.
- */
 @Composable
 private fun RegistrationStep(
     number: String,
@@ -646,9 +615,6 @@ private fun RegistrationStep(
     }
 }
 
-/*
- * Security checklist item.
- */
 @Composable
 private fun SecurityItem(
     text: String,
@@ -695,11 +661,6 @@ private fun SecurityItem(
     }
 }
 
-/*
- * Lightweight client-side password score.
- *
- * Backend validation must remain authoritative.
- */
 private fun calculatePasswordScore(
     password: String
 ): Int {
@@ -726,4 +687,3 @@ private fun passwordStrengthLabel(
         else -> "Excellent password"
     }
 }
-

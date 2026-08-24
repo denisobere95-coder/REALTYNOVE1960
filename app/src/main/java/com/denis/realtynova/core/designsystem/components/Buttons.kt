@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import com.denis.realtynova.core.util.rememberHapticFeedback
 import com.denis.realtynova.core.designsystem.theme.ChampagneGold
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
 import com.denis.realtynova.core.designsystem.theme.RealtyNovaSpring
@@ -44,6 +45,7 @@ fun RealtyNovaButton(
     contentPadding: PaddingValues = PaddingValues(horizontal = 24.dp, vertical = 14.dp),
     content: @Composable RowScope.() -> Unit
 ) {
+    val haptic = rememberHapticFeedback()
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
@@ -100,7 +102,10 @@ fun RealtyNovaButton(
                 interactionSource = interactionSource,
                 indication = null,
                 enabled = enabled,
-                onClick = onClick
+                onClick = {
+                    haptic()
+                    onClick()
+                }
             ),
         contentAlignment = Alignment.Center
     ) {

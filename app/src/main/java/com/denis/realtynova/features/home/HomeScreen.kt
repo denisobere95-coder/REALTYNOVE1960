@@ -43,6 +43,8 @@ import com.denis.realtynova.core.util.PriceFormatter
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
+data class HomeCategory(val title: String, val iconRes: Int, val subtitle: String)
+
 @Composable
 fun HomeScreen(
     onNavigateToDetail: (String) -> Unit = {},
@@ -53,6 +55,9 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit = {},
     onNavigateToAdminDashboard: () -> Unit = {},
     onNavigateToAgentDashboard: () -> Unit = {},
+    onNavigateToCountyExplorer: () -> Unit = {},
+    onNavigateToMarketInsights: () -> Unit = {},
+    onNavigateToMatchmaker: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -84,7 +89,7 @@ fun HomeScreen(
                     }
                 }
                 
-                if (userRole == UserRole.AGENT) {
+                if (userRole == UserRole.AGENT || userRole == UserRole.ADMIN) {
                     SmallFloatingActionButton(
                         onClick = onNavigateToAgentDashboard,
                         containerColor = DeepEmerald,
@@ -107,6 +112,9 @@ fun HomeScreen(
                 onNavigateToNotifications = onNavigateToNotifications,
                 onNavigateToMessages = onNavigateToMessages,
                 onNavigateToProfile = onNavigateToProfile,
+                onNavigateToCountyExplorer = onNavigateToCountyExplorer,
+                onNavigateToMarketInsights = onNavigateToMarketInsights,
+                onNavigateToMatchmaker = onNavigateToMatchmaker,
                 onToggleFavorite = viewModel::toggleFavorite,
                 onRefresh = viewModel::refresh,
                 onExitApp = { activity?.finish() }
@@ -124,6 +132,9 @@ fun HomeScreenContent(
     onNavigateToNotifications: () -> Unit,
     onNavigateToMessages: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToCountyExplorer: () -> Unit,
+    onNavigateToMarketInsights: () -> Unit,
+    onNavigateToMatchmaker: () -> Unit,
     onToggleFavorite: (String) -> Unit,
     onRefresh: () -> Unit,
     onExitApp: () -> Unit
@@ -196,7 +207,7 @@ fun HomeScreenContent(
                 }
 
                 item {
-                    LuxuryCategoriesRow()
+                    LuxuryCategoriesRow(onNavigateToCountyExplorer)
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
@@ -205,7 +216,7 @@ fun HomeScreenContent(
                     val trendText = if (latestTrend >= 0) "+${latestTrend}% market growth" else "${latestTrend}% market shift"
                     MarketPulseCard(
                         trends = trendText,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp).clickable { onNavigateToMarketInsights() }
                     )
                 }
 
@@ -230,6 +241,15 @@ fun HomeScreenContent(
                         onSeeAll = onNavigateToSearch
                     )
                     CuratedCollections()
+                }
+
+                item {
+                    PremiumSectionHeader(
+                        title = "Matchmaker",
+                        subtitle = "Find your perfect home",
+                        onSeeAll = onNavigateToMatchmaker
+                    )
+                    MatchmakerHero(onClick = onNavigateToMatchmaker)
                 }
 
                 item {
@@ -265,10 +285,25 @@ fun HomeScreenContent(
     }
 }
 
-data class HomeCategory(val title: String, val iconRes: Int, val subtitle: String)
+@Composable
+private fun MatchmakerHero(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).clickable { onClick() },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+    ) {
+        Row(modifier = Modifier.padding(24.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("AI Property Matchmaker", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Swipe to find your next home", style = MaterialTheme.typography.bodySmall)
+            }
+            Icon(Icons.Default.Favorite, null, tint = DeepEmerald)
+        }
+    }
+}
 
 @Composable
-fun LuxuryCategoriesRow() {
+fun LuxuryCategoriesRow(onItemClick: () -> Unit = {}) {
     val categories = listOf(
         HomeCategory("Villas", R.drawable.img_43, "Lush living"),
         HomeCategory("Urban", R.drawable.img_1, "City lights"),
@@ -283,7 +318,7 @@ fun LuxuryCategoriesRow() {
         items(categories) { category ->
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.width(90.dp)
+                modifier = Modifier.width(90.dp).clickable { onItemClick() }
             ) {
                 Box(
                     modifier = Modifier
@@ -728,6 +763,9 @@ fun HomeScreenPreview() {
             onNavigateToNotifications = {},
             onNavigateToMessages = {},
             onNavigateToProfile = {},
+            onNavigateToCountyExplorer = {},
+            onNavigateToMarketInsights = {},
+            onNavigateToMatchmaker = {},
             onToggleFavorite = {},
             onRefresh = {},
             onExitApp = {}

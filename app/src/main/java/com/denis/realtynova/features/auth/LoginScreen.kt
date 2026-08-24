@@ -68,6 +68,7 @@ import kotlinx.coroutines.delay
 fun LoginScreen(
     onLoginSuccessAction: () -> Unit,
     onRegisterClickAction: () -> Unit,
+    onGoogleSignInAction: () -> Unit = {},
     onPhoneAuthClickAction: () -> Unit = {},
     onBackClickAction: () -> Unit = {}
 ) {
@@ -77,10 +78,6 @@ fun LoginScreen(
 
     var showContent by remember { mutableStateOf(false) }
 
-    /*
-     * Small entrance animation.
-     * The screen should feel alive without delaying authentication.
-     */
     val logoScale = remember {
         Animatable(0.82f)
     }
@@ -95,7 +92,6 @@ fun LoginScreen(
         )
 
         delay(100)
-
         showContent = true
     }
 
@@ -123,9 +119,6 @@ fun LoginScreen(
                 )
         )
 
-        /*
-         * Top navigation.
-         */
         IconButton(
             onClick = onBackClickAction,
             modifier = Modifier
@@ -142,9 +135,6 @@ fun LoginScreen(
             )
         }
 
-        /*
-         * Main content.
-         */
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -159,9 +149,6 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            /*
-             * Brand.
-             */
             Box(
                 modifier = Modifier
                     .size(76.dp)
@@ -215,9 +202,6 @@ fun LoginScreen(
                 exit = fadeOut()
             ) {
 
-                /*
-                 * Floating authentication surface.
-                 */
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(32.dp),
@@ -253,9 +237,6 @@ fun LoginScreen(
                             modifier = Modifier.height(28.dp)
                         )
 
-                        /*
-                         * Email.
-                         */
                         RealtyNovaTextField(
                             value = email,
                             onValueChange = { email = it },
@@ -273,14 +254,6 @@ fun LoginScreen(
                             modifier = Modifier.height(16.dp)
                         )
 
-                        /*
-                         * Password.
-                         *
-                         * If RealtyNovaTextField does not currently support
-                         * trailingIcon / visualTransformation, add those
-                         * parameters to the component rather than rebuilding
-                         * the field here.
-                         */
                         RealtyNovaTextField(
                             value = password,
                             onValueChange = { password = it },
@@ -325,9 +298,6 @@ fun LoginScreen(
                             modifier = Modifier.height(10.dp)
                         )
 
-                        /*
-                         * Forgot password.
-                         */
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End
@@ -344,9 +314,6 @@ fun LoginScreen(
                             modifier = Modifier.height(24.dp)
                         )
 
-                        /*
-                         * Main CTA.
-                         */
                         RealtyNovaButton(
                             onClick = onLoginSuccessAction,
                             modifier = Modifier
@@ -364,9 +331,6 @@ fun LoginScreen(
                             modifier = Modifier.height(22.dp)
                         )
 
-                        /*
-                         * Divider.
-                         */
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -400,21 +364,10 @@ fun LoginScreen(
                             modifier = Modifier.height(18.dp)
                         )
 
-                        /*
-                         * Social / alternative authentication.
-                         */
                         SocialAuthSection(
-                            onGoogleClick = {
-                                // Launch Google authentication.
-                            },
-                            onFacebookClick = {
-                                // Launch Facebook authentication only
-                                // when the provider is actually configured.
-                            },
-                            onInstagramClick = {
-                                // Do not expose this provider unless
-                                // authentication is genuinely implemented.
-                            },
+                            onGoogleClick = onGoogleSignInAction,
+                            onFacebookClick = { },
+                            onInstagramClick = { },
                             onPhoneClick = onPhoneAuthClickAction
                         )
 
@@ -422,9 +375,6 @@ fun LoginScreen(
                             modifier = Modifier.height(24.dp)
                         )
 
-                        /*
-                         * Registration CTA.
-                         */
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center,
@@ -474,4 +424,3 @@ fun LoginScreen(
         }
     }
 }
-

@@ -6,6 +6,7 @@ import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.auth.userProfileChangeRequest
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -39,10 +40,21 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun signUpWithEmail(email: String, password: String): Result<User> {
+    override suspend fun signUpWithEmail(email: String, password: String, phoneNumber: String, displayName: String): Result<User> {
         return try {
             val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
-            val user = result.user?.toDomainUser() ?: throw Exception("User not found after signup")
+            val firebaseUser = result.user ?: throw Exception("User not found after signup")
+            
+            // Update profile with display name
+            val profileUpdates = userProfileChangeRequest {
+                this.displayName = displayName
+            }
+            firebaseUser.updateProfile(profileUpdates).await()
+            
+            val user = firebaseUser.toDomainUser().copy(
+                displayName = displayName,
+                phoneNumber = phoneNumber
+            )
             Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)

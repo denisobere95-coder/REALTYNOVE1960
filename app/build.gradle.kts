@@ -24,7 +24,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val apiKey: String = project.findProperty("realtynova.api.key") as? String ?: ""
+        val mapsApiKey: String = project.findProperty("maps.api.key") as? String ?: ""
+        
         buildConfigField("String", "REALTYNOVA_API_KEY", "\"$apiKey\"")
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     buildTypes {

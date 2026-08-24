@@ -1,14 +1,19 @@
 package com.denis.realtynova.core.navigation
 
+import android.app.Activity
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -17,8 +22,7 @@ import androidx.navigation.toRoute
 import com.denis.realtynova.features.auth.*
 import com.denis.realtynova.features.booking.BookingScreen
 import com.denis.realtynova.features.dashboard.*
-import com.denis.realtynova.features.home.HomeScreen
-import com.denis.realtynova.features.home.PropertyDetailScreen
+import com.denis.realtynova.features.home.*
 import com.denis.realtynova.features.map.MapScreen
 import com.denis.realtynova.features.messages.ChatDetailScreen
 import com.denis.realtynova.features.messages.MessagesScreen
@@ -26,14 +30,16 @@ import com.denis.realtynova.features.payment.PaymentScreen
 import com.denis.realtynova.features.profile.EditProfileScreen
 import com.denis.realtynova.features.profile.ProfileScreen
 import com.denis.realtynova.features.saved.SavedScreen
-import com.denis.realtynova.features.search.AiAssistantScreen
-import com.denis.realtynova.features.search.SearchScreen
+import com.denis.realtynova.features.search.*
 
 @Composable
 fun RealtyNovaNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
+    // Shared Auth ViewModel for the entire auth flow
+    val authViewModel: AuthViewModel = hiltViewModel()
+
     NavHost(
         navController = navController,
         startDestination = Route.Splash,
@@ -52,9 +58,8 @@ fun RealtyNovaNavHost(
         }
     ) {
         composable<Route.Splash> {
-            val viewModel: AuthViewModel = hiltViewModel()
             SplashScreen(
-                viewModel = viewModel,
+                viewModel = authViewModel,
                 onNavigateToMain = {
                     navController.navigate(Route.Home) {
                         popUpTo(Route.Splash) { inclusive = true }
@@ -74,9 +79,8 @@ fun RealtyNovaNavHost(
         }
 
         composable<Route.Onboarding> {
-            val viewModel: AuthViewModel = hiltViewModel()
             OnboardingScreen(
-                viewModel = viewModel,
+                viewModel = authViewModel,
                 onNavigateToAuth = {
                     navController.navigate(Route.Welcome) {
                         popUpTo(Route.Onboarding) { inclusive = true }
@@ -93,6 +97,9 @@ fun RealtyNovaNavHost(
         }
 
         composable<Route.Login> {
+            val context = LocalContext.current
+            val uiState by authViewModel.uiState.collectAsState()
+
             LoginScreen(
                 onLoginSuccessAction = {
                     navController.navigate(Route.Home) {
@@ -104,6 +111,9 @@ fun RealtyNovaNavHost(
                         launchSingleTop = true
                     }
                 },
+                onGoogleSignInAction = {
+                    authViewModel.signInWithGoogle(context)
+                },
                 onPhoneAuthClickAction = {
                     navController.navigate(Route.PhoneLogin)
                 },
@@ -111,18 +121,32 @@ fun RealtyNovaNavHost(
                     navController.popBackStack()
                 }
             )
+
+            LaunchedEffect(uiState) {
+                if (uiState is AuthUiState.Success) {
+                    navController.navigate(Route.Home) {
+                        popUpTo(Route.Welcome) { inclusive = true }
+                    }
+                }
+            }
         }
 
         composable<Route.Register> {
+            val context = LocalContext.current
+            val uiState by authViewModel.uiState.collectAsState()
+
             RegisterScreen(
-                onRegisterSuccessAction = {
-                    navController.navigate(Route.Otp("your-phone"))
+                onRegisterSuccessAction = { name, email, password, phone ->
+                    authViewModel.signUp(name, email, password, phone)
                 },
                 onLoginClickAction = {
                     navController.navigate(Route.Login) {
                         launchSingleTop = true
                     }
                 },
+                onGoogleSignInAction = {
+                    authViewModel.signInWithGoogle(context)
+                },
                 onPhoneAuthClickAction = {
                     navController.navigate(Route.PhoneLogin)
                 },
@@ -130,33 +154,56 @@ fun RealtyNovaNavHost(
                     navController.popBackStack()
                 }
             )
+
+            LaunchedEffect(uiState) {
+                if (uiState is AuthUiState.Success) {
+                    navController.navigate(Route.AccountType)
+                }
+            }
         }
 
         composable<Route.PhoneLogin> {
-            val viewModel: AuthViewModel = hiltViewModel()
+            val uiState by authViewModel.uiState.collectAsState()
+
             PhoneLoginScreen(
-                onSendCodeAction = { phone ->
-                    viewModel.setVerificationId("dummy-id")
-                    navController.navigate(Route.Otp(phone))
+                onSendCodeAction = { activity, phone ->
+                    authViewModel.sendOtpCode(activity, phone)
                 },
-                onBackClickAction = { navController.popBackStack() }
+                onBackClickAction = { navController.popBackStack() },
+                isSending = uiState is AuthUiState.Loading,
+                errorMessage = (uiState as? AuthUiState.Error)?.message
             )
+
+            LaunchedEffect(uiState) {
+                if (uiState is AuthUiState.CodeSent) {
+                    val phone = (uiState as AuthUiState.CodeSent).phoneNumber
+                    navController.navigate(Route.Otp(phone))
+                }
+            }
         }
 
         composable<Route.Otp> { backStackEntry ->
             val route: Route.Otp = backStackEntry.toRoute()
-            val viewModel: AuthViewModel = hiltViewModel()
+            val uiState by authViewModel.uiState.collectAsState()
+            val context = LocalContext.current
+            val activity = context as? Activity
+
             OtpScreen(
                 phoneNumber = route.phoneNumber,
-                onVerify = { otp ->
-                    viewModel.signInWithPhone(route.phoneNumber, otp)
+                onVerify = { code ->
+                    authViewModel.verifyOtp(route.phoneNumber, code)
                 },
-                onResend = { /* Logic */ },
-                onNavigateBack = { navController.popBackStack() }
+                onResend = {
+                    if (activity != null) {
+                        authViewModel.resendOtpCode(activity, route.phoneNumber)
+                    }
+                },
+                onNavigateBack = { navController.popBackStack() },
+                isVerifying = uiState is AuthUiState.Loading,
+                errorMessage = (uiState as? AuthUiState.Error)?.message
             )
             
-            val uiState by viewModel.uiState.collectAsState()
-            androidx.compose.runtime.LaunchedEffect(uiState) {
+            LaunchedEffect(uiState) {
                 if (uiState is AuthUiState.Success) {
                     navController.navigate(Route.AccountType)
                 }
@@ -164,10 +211,9 @@ fun RealtyNovaNavHost(
         }
 
         composable<Route.AccountType> {
-            val viewModel: AuthViewModel = hiltViewModel()
             AccountTypeScreen(
                 onTypeSelected = { role ->
-                    viewModel.setUserRole(role)
+                    authViewModel.setUserRole(role)
                     navController.navigate(Route.Home) {
                         popUpTo(Route.Welcome) { inclusive = true }
                     }
@@ -187,7 +233,7 @@ fun RealtyNovaNavHost(
                     navController.navigate(Route.Search)
                 },
                 onNavigateToNotifications = {
-                    // navController.navigate(Route.Notifications)
+                    navController.navigate(Route.Notifications)
                 },
                 onNavigateToMessages = {
                     navController.navigate(Route.Messages)
@@ -200,18 +246,61 @@ fun RealtyNovaNavHost(
                 },
                 onNavigateToAgentDashboard = {
                     navController.navigate(Route.AgentDashboard)
+                },
+                onNavigateToCountyExplorer = {
+                    navController.navigate(Route.CountyExplorer)
+                },
+                onNavigateToMatchmaker = {
+                    navController.navigate(Route.Matchmaker)
+                },
+                onNavigateToMarketInsights = {
+                    navController.navigate(Route.MarketInsights)
                 }
             )
         }
-        composable<Route.Search> { SearchScreen() }
-        composable<Route.Map> { MapScreen() }
-        composable<Route.Saved> { SavedScreen() }
+        composable<Route.Search> { 
+            SearchScreen(
+                onPropertyClick = { id -> navController.navigate(Route.PropertyDetail(id)) },
+                onOpenAi = { navController.navigate(Route.AiAssistant) },
+                onFiltersClick = { /* Show filters sheet */ },
+                onOpenMap = { navController.navigate(Route.Map) }
+            )
+        }
+        composable<Route.Map> {
+            MapScreen(
+                onNavigateToDetail = { id ->
+                    navController.navigate(Route.PropertyDetail(id))
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToSearch = {
+                    navController.navigate(Route.Search)
+                }
+            )
+        }
+        composable<Route.Saved> { 
+            SavedScreen(
+                onPropertyClick = { id -> navController.navigate(Route.PropertyDetail(id)) },
+                onCompareClick = { id1, id2 -> navController.navigate(Route.PropertyComparison(id1, id2)) },
+                onExploreProperties = { navController.navigate(Route.Home) },
+                onSearch = { navController.navigate(Route.Search) },
+                onNotifications = { navController.navigate(Route.Notifications) }
+            )
+        }
         composable<Route.Profile> { 
             ProfileScreen(
                 onNavigateToEditProfile = { navController.navigate(Route.EditProfile) },
                 onNavigateToMessages = { navController.navigate(Route.Messages) },
                 onNavigateToAdminDashboard = { navController.navigate(Route.AdminDashboard) },
-                onNavigateToAgentDashboard = { navController.navigate(Route.AgentDashboard) }
+                onNavigateToAgentDashboard = { navController.navigate(Route.AgentDashboard) },
+                onNavigateToNotifications = { navController.navigate(Route.Notifications) },
+                onNavigateToMortgageCalculator = { navController.navigate(Route.MortgageCalculator) },
+                onLogout = {
+                    navController.navigate(Route.Welcome) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -225,13 +314,19 @@ fun RealtyNovaNavHost(
                 },
                 onNavigateToPayment = { propertyId, amount ->
                     navController.navigate(Route.Payment(propertyId, amount))
+                },
+                onNavigateToVirtualTour = { propertyId ->
+                    navController.navigate(Route.VirtualTour(propertyId))
                 }
             )
         }
 
         composable<Route.AiAssistant> {
             AiAssistantScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onPropertyClick = { id ->
+                    navController.navigate(Route.PropertyDetail(id))
+                }
             )
         }
 
@@ -300,6 +395,59 @@ fun RealtyNovaNavHost(
 
         composable<Route.EditProfile> {
             EditProfileScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable<Route.VirtualTour> { backStackEntry ->
+            val route: Route.VirtualTour = backStackEntry.toRoute()
+            VirtualTourScreen(
+                propertyId = route.propertyId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable<Route.Notifications> {
+            NotificationsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable<Route.CountyExplorer> {
+            CountyExplorerScreen(
+                onBack = { navController.popBackStack() },
+                onCountyClick = { _ ->
+                    navController.navigate(Route.Search)
+                }
+            )
+        }
+
+        composable<Route.MarketInsights> {
+            MarketInsightsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable<Route.MortgageCalculator> {
+            MortgageCalculatorScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable<Route.Matchmaker> {
+            MatchmakerScreen(
+                onBack = { navController.popBackStack() },
+                onPropertyClick = { id ->
+                    navController.navigate(Route.PropertyDetail(id))
+                }
+            )
+        }
+
+        composable<Route.PropertyComparison> { backStackEntry ->
+            val route: Route.PropertyComparison = backStackEntry.toRoute()
+            PropertyComparisonScreen(
+                id1 = route.propertyId1,
+                id2 = route.propertyId2,
                 onBack = { navController.popBackStack() }
             )
         }

@@ -39,6 +39,8 @@ fun ProfileScreen(
     onNavigateToMessages: () -> Unit = {},
     onNavigateToAdminDashboard: () -> Unit = {},
     onNavigateToAgentDashboard: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
+    onNavigateToMortgageCalculator: () -> Unit = {},
     onLogout: () -> Unit = {},
     viewModel: AuthViewModel = hiltViewModel()
 ) {
@@ -50,7 +52,6 @@ fun ProfileScreen(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            // Space for Bottom Bar
             Spacer(modifier = Modifier.height(100.dp))
         }
     ) { innerPadding ->
@@ -65,7 +66,8 @@ fun ProfileScreen(
                 name = user?.displayName ?: "Elite Member",
                 email = user?.email ?: "member@realtynova.com",
                 photoUrl = user?.photoUrl,
-                role = role
+                role = role,
+                onEditClick = onNavigateToEditProfile
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -81,6 +83,17 @@ fun ProfileScreen(
                     title = "Messages",
                     onClick = onNavigateToMessages
                 )
+                ProfileMenuItem(
+                    icon = Icons.Default.VerifiedUser,
+                    title = "Identity Verification",
+                    subtitle = "Get your blue badge",
+                    onClick = {}
+                )
+                ProfileMenuItem(
+                    icon = Icons.Default.Calculate,
+                    title = "Mortgage Calculator",
+                    onClick = onNavigateToMortgageCalculator
+                )
                 
                 if (role == UserRole.ADMIN) {
                     ProfileMenuItem(
@@ -90,7 +103,7 @@ fun ProfileScreen(
                     )
                 }
                 
-                if (role == UserRole.AGENT) {
+                if (role == UserRole.AGENT || role == UserRole.ADMIN) {
                     ProfileMenuItem(
                         icon = Icons.Default.Dashboard,
                         title = "Agent Dashboard",
@@ -109,7 +122,7 @@ fun ProfileScreen(
                 ProfileMenuItem(
                     icon = Icons.Default.NotificationsNone,
                     title = "Notification Settings",
-                    onClick = {}
+                    onClick = onNavigateToNotifications
                 )
                 ProfileMenuItem(
                     icon = Icons.Default.Language,
@@ -120,6 +133,12 @@ fun ProfileScreen(
             }
 
             ProfileSection(title = "SUPPORT") {
+                ProfileMenuItem(
+                    icon = Icons.Default.HeadsetMic,
+                    title = "Live AI Concierge",
+                    subtitle = "Always active",
+                    onClick = {}
+                )
                 ProfileMenuItem(
                     icon = Icons.Default.HelpOutline,
                     title = "Help Center",
@@ -174,14 +193,14 @@ private fun ProfileHero(
     name: String,
     email: String,
     photoUrl: String?,
-    role: UserRole
+    role: UserRole,
+    onEditClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(280.dp)
     ) {
-        // Gradient Background
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -227,7 +246,7 @@ private fun ProfileHero(
                 }
                 
                 Surface(
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(32.dp).clickable { onEditClick() },
                     shape = CircleShape,
                     color = ChampagneGold,
                     shadowElevation = 4.dp
