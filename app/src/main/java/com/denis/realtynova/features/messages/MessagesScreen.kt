@@ -24,6 +24,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
 import com.denis.realtynova.core.designsystem.theme.ChampagneGold
+import com.denis.realtynova.core.designsystem.theme.Graphite
+import com.denis.realtynova.core.designsystem.theme.SlateGray
 import androidx.compose.ui.tooling.preview.Preview
 import com.denis.realtynova.core.designsystem.theme.REALTYNOVATheme
 import com.denis.realtynova.core.domain.model.RecentChat
@@ -110,9 +112,11 @@ fun ChatListItem(chat: RecentChat, onClick: () -> Unit) {
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface
+        color = Color.White,
+        shadowElevation = 2.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.2f))
     ) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(
                 modifier = Modifier.size(56.dp),
                 shape = CircleShape,
@@ -142,17 +146,24 @@ fun ChatListItem(chat: RecentChat, onClick: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = chat.otherUserName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(
+                        text = chat.otherUserName,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp,
+                        color = Graphite
+                    )
                     Text(
                         text = formatTimestamp(chat.lastMessageTime),
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = SlateGray,
+                        fontWeight = FontWeight.Medium
                     )
                 }
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = chat.lastMessage,
                     fontSize = 14.sp,
-                    color = if (chat.unreadCount > 0) Color.Black else Color.Gray,
+                    color = if (chat.unreadCount > 0) Graphite else SlateGray,
                     fontWeight = if (chat.unreadCount > 0) FontWeight.Bold else FontWeight.Normal,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
