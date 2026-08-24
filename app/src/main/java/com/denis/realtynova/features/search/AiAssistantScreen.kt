@@ -37,6 +37,7 @@ import coil.compose.AsyncImage
 import com.denis.realtynova.core.domain.model.Property
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
 import com.denis.realtynova.core.designsystem.theme.ChampagneGold
+import com.denis.realtynova.core.designsystem.theme.Graphite
 import com.denis.realtynova.core.designsystem.theme.RealtyNovaTextStyles
 import java.util.Locale
 
@@ -188,8 +189,15 @@ private fun PremiumChatBubble(
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = if (isUser) Alignment.End else Alignment.Start) {
         Surface(
             modifier = Modifier.fillMaxWidth(0.85f),
-            color = if (isUser) DeepEmerald else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = if (isUser) 20.dp else 4.dp, bottomEnd = if (isUser) 4.dp else 20.dp)
+            color = if (isUser) DeepEmerald else Color.White,
+            shape = RoundedCornerShape(
+                topStart = 20.dp,
+                topEnd = 20.dp,
+                bottomStart = if (isUser) 20.dp else 4.dp,
+                bottomEnd = if (isUser) 4.dp else 20.dp
+            ),
+            shadowElevation = if (isUser) 2.dp else 4.dp,
+            border = if (!isUser) androidx.compose.foundation.BorderStroke(1.dp, LuxuryGold.copy(alpha = 0.2f)) else null
         ) {
             if (message.isTyping) {
                 TypingIndicator(modifier = Modifier.padding(16.dp))
@@ -198,7 +206,8 @@ private fun PremiumChatBubble(
                     text = message.text,
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = if (isUser) Color.White else MaterialTheme.colorScheme.onSurface
+                    color = if (isUser) Color.White else Graphite,
+                    lineHeight = 22.sp
                 )
             }
         }

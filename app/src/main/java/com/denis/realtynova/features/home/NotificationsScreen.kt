@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
 import com.denis.realtynova.core.designsystem.theme.ChampagneGold
+import com.denis.realtynova.core.designsystem.theme.Graphite
+import com.denis.realtynova.core.designsystem.theme.SlateGray
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,34 +86,54 @@ private fun NotificationRow(item: NotificationItem) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        color = Color.White,
+        shadowElevation = 2.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier.size(52.dp),
                 shape = CircleShape,
-                color = item.color.copy(alpha = 0.1f)
+                color = item.color.copy(alpha = 0.12f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(imageVector = item.icon, contentDescription = null, tint = item.color, modifier = Modifier.size(24.dp))
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = null,
+                        tint = item.color,
+                        modifier = Modifier.size(26.dp)
+                    )
                 }
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(text = item.title, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    Text(text = item.time, fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = item.title,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp,
+                        color = Graphite
+                    )
+                    Text(
+                        text = item.time,
+                        fontSize = 11.sp,
+                        color = SlateGray,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = item.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 18.sp
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = SlateGray,
+                    lineHeight = 20.sp
                 )
             }
         }

@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.tooling.preview.Preview
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
+import com.denis.realtynova.core.designsystem.theme.Graphite
 import com.denis.realtynova.core.designsystem.theme.REALTYNOVATheme
 import com.denis.realtynova.core.domain.model.Message
 import com.denis.realtynova.core.domain.model.User
@@ -144,19 +145,22 @@ fun MessageBubble(message: Message, isCurrentUser: Boolean) {
         horizontalAlignment = if (isCurrentUser) Alignment.End else Alignment.Start
     ) {
         Surface(
-            color = if (isCurrentUser) DeepEmerald else Color.LightGray.copy(alpha = 0.3f),
+            color = if (isCurrentUser) DeepEmerald else Color.White,
             shape = RoundedCornerShape(
-                topStart = 16.dp,
-                topEnd = 16.dp,
-                bottomStart = if (isCurrentUser) 16.dp else 0.dp,
-                bottomEnd = if (isCurrentUser) 0.dp else 16.dp
-            )
+                topStart = 18.dp,
+                topEnd = 18.dp,
+                bottomStart = if (isCurrentUser) 18.dp else 2.dp,
+                bottomEnd = if (isCurrentUser) 2.dp else 18.dp
+            ),
+            shadowElevation = 2.dp,
+            border = if (!isCurrentUser) androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f)) else null
         ) {
             Text(
                 text = message.content,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                color = if (isCurrentUser) Color.White else Color.Black,
-                fontSize = 15.sp
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                color = if (isCurrentUser) Color.White else Graphite,
+                fontSize = 15.sp,
+                lineHeight = 20.sp
             )
         }
         Text(
