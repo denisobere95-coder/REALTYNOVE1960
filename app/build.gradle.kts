@@ -76,12 +76,17 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.core.splashscreen)
     implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.firebase.ai)
     implementation(libs.firebase.database)
     implementation(libs.firebase.inappmessaging.display)
     implementation(libs.google.firebase.auth)
     implementation(libs.googleid)
+    
+    // Glance
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
 
     // Hilt
     implementation(libs.hilt.android)

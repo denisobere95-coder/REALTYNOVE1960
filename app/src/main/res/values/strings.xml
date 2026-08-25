@@ -2,4 +2,9 @@
     <string name="app_name">REALTYNOVA</string>
     <!-- Replace with your actual Web Client ID from Firebase Console -->
     <string name="google_web_client_id">387467289822-xxxx.apps.googleusercontent.com</string>
+    <!-- App Shortcuts -->
+    <string name="shortcut_search">Search</string>
+    <string name="shortcut_search_long">Search Properties</string>
+    <string name="shortcut_ai">Nova AI</string>
+    <string name="shortcut_ai_long">Chat with AI Concierge</string>
 </resources>

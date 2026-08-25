@@ -1,9 +1,12 @@
 package com.denis.realtynova.core.data.repository
 
+import com.denis.realtynova.core.data.local.PropertyDao
+import com.denis.realtynova.core.data.local.PropertyEntity
 import com.denis.realtynova.core.domain.model.*
 import com.denis.realtynova.core.domain.repository.PropertyRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -11,28 +14,36 @@ import timber.log.Timber
 
 @Singleton
 class PropertyRepositoryImpl @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val propertyDao: PropertyDao
 ) : PropertyRepository {
 
     private val propertiesCollection = firestore.collection("properties")
 
     override suspend fun getProperties(): List<Property> {
-        val firestoreProperties = try {
-            propertiesCollection
+        // Try fetching from network and cache
+        try {
+            val firestoreProperties = propertiesCollection
                 .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get()
                 .await()
                 .toObjects(PropertyDto::class.java)
-                .map { it.toDomain() }
+            
+            if (firestoreProperties.isNotEmpty()) {
+                val entities = firestoreProperties.map { it.toEntity() }
+                propertyDao.clearAll()
+                propertyDao.insertProperties(entities)
+            }
         } catch (e: Exception) {
-            Timber.e(e, "Error fetching properties from Firestore")
-            emptyList()
+            Timber.e(e, "Firestore fetch failed, falling back to local cache")
         }
 
-        return if (firestoreProperties.isEmpty()) {
-            getMockProperties()
+        // Return from local cache
+        val cached = propertyDao.getAllProperties().first()
+        return if (cached.isNotEmpty()) {
+            cached.map { it.toDomain() }
         } else {
-            firestoreProperties
+            getMockProperties()
         }
     }
 
@@ -292,6 +303,31 @@ data class PropertyDto(
         nearbyAmenities = nearbyAmenities.map { it.toDomain() },
         yieldPercentage = yieldPercentage,
         appreciationRate = appreciationRate
+    )
+
+    fun toEntity(): PropertyEntity = PropertyEntity(
+        id = id,
+        title = title,
+        description = description,
+        price = price,
+        currency = currency,
+        location = location,
+        address = address,
+        bedrooms = bedrooms,
+        bathrooms = bathrooms,
+        areaSqFt = areaSqFt,
+        images = images.map { it.toDomain() },
+        amenities = amenities,
+        type = type,
+        listingType = listingType,
+        isVerified = isVerified,
+        isPremium = isPremium,
+        latitude = latitude,
+        longitude = longitude,
+        neighborhoodInfo = neighborhoodInfo,
+        yieldPercentage = yieldPercentage,
+        appreciationRate = appreciationRate,
+        createdAt = createdAt
     )
 }
 

@@ -50,7 +50,11 @@ sealed interface Route {
     data object Profile : Route
 
     @Serializable
-    data class PropertyDetail(val id: String) : Route
+    data class PropertyDetail(val id: String) : Route {
+        companion object {
+            const val DEEP_LINK_URI = "realtynova://property/{id}"
+        }
+    }
 
     @Serializable
     data object AiAssistant : Route

@@ -1,9 +1,7 @@
 package com.denis.realtynova
 
 import android.os.Bundle
-import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.Button
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -29,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -37,6 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import com.denis.realtynova.core.data.manager.SessionManager
 import com.denis.realtynova.core.designsystem.components.BottomTab
 import com.denis.realtynova.core.designsystem.components.CreativeBottomBar
+import com.denis.realtynova.core.designsystem.components.ErrorBoundary
 import com.denis.realtynova.core.designsystem.components.RealtyNovaButton
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
 import com.denis.realtynova.core.designsystem.theme.REALTYNOVATheme
@@ -54,55 +54,48 @@ class MainActivity : FragmentActivity() {
     @Inject lateinit var biometricManager: BiometricManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
-        // Test Crash Button
-        val crashButton = Button(this)
-        crashButton.text = "Test Crash"
-        crashButton.setOnClickListener {
-           throw RuntimeException("Test Crash") // Force a crash
-        }
-        addContentView(crashButton, ViewGroup.LayoutParams(
-               ViewGroup.LayoutParams.MATCH_PARENT,
-               ViewGroup.LayoutParams.WRAP_CONTENT))
 
         setContent {
             REALTYNOVATheme {
-                val isBiometricEnabled by sessionManager.isBiometricEnabled.collectAsState(initial = false)
-                val isScreenshotPreventionEnabled by sessionManager.isScreenshotPreventionEnabled.collectAsState(initial = false)
+                ErrorBoundary {
+                    val isBiometricEnabled by sessionManager.isBiometricEnabled.collectAsState(initial = false)
+                    val isScreenshotPreventionEnabled by sessionManager.isScreenshotPreventionEnabled.collectAsState(initial = false)
 
-                var isUnlocked by remember { mutableStateOf(false) }
-                val scope = rememberCoroutineScope()
+                    var isUnlocked by remember { mutableStateOf(false) }
+                    val scope = rememberCoroutineScope()
 
-                LaunchedEffect(isScreenshotPreventionEnabled) {
-                    if (isScreenshotPreventionEnabled) {
-                        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-                    } else {
-                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    LaunchedEffect(isScreenshotPreventionEnabled) {
+                        if (isScreenshotPreventionEnabled) {
+                            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+                        } else {
+                            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                        }
                     }
-                }
 
-                if (isBiometricEnabled && !isUnlocked) {
-                    val snackbarHostState = remember { SnackbarHostState() }
-                    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
-                        BiometricLockScreen(
-                            onAuthRequested = {
-                                biometricManager.authenticate(
-                                    activity = this,
-                                    onSuccess = { isUnlocked = true },
-                                    onError = { error ->
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(error)
+                    if (isBiometricEnabled && !isUnlocked) {
+                        val snackbarHostState = remember { SnackbarHostState() }
+                        Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+                            BiometricLockScreen(
+                                onAuthRequested = {
+                                    biometricManager.authenticate(
+                                        activity = this,
+                                        onSuccess = { isUnlocked = true },
+                                        onError = { error ->
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar(error)
+                                            }
                                         }
-                                    }
-                                )
-                            },
-                            modifier = Modifier.padding(padding)
-                        )
+                                    )
+                                },
+                                modifier = Modifier.padding(padding)
+                            )
+                        }
+                    } else {
+                        MainContent()
                     }
-                } else {
-                    MainContent()
                 }
             }
         }

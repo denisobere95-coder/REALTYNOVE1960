@@ -19,6 +19,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import androidx.navigation.navDeepLink
 import com.denis.realtynova.features.auth.*
 import com.denis.realtynova.features.booking.BookingScreen
 import com.denis.realtynova.features.dashboard.*
@@ -274,7 +275,11 @@ fun RealtyNovaNavHost(
                 }
             )
         }
-        composable<Route.Search> { 
+        composable<Route.Search>(
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "realtynova://search" }
+            )
+        ) { 
             SearchScreen(
                 onPropertyClick = { id -> navController.navigate(Route.PropertyDetail(id)) },
                 onOpenAi = { navController.navigate(Route.AiAssistant) },
@@ -320,7 +325,11 @@ fun RealtyNovaNavHost(
             )
         }
 
-        composable<Route.PropertyDetail> { backStackEntry ->
+        composable<Route.PropertyDetail>(
+            deepLinks = listOf(
+                navDeepLink { uriPattern = Route.PropertyDetail.DEEP_LINK_URI }
+            )
+        ) { backStackEntry ->
             val route: Route.PropertyDetail = backStackEntry.toRoute()
             PropertyDetailScreen(
                 id = route.id,
@@ -337,7 +346,11 @@ fun RealtyNovaNavHost(
             )
         }
 
-        composable<Route.AiAssistant> {
+        composable<Route.AiAssistant>(
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "realtynova://ai" }
+            )
+        ) {
             AiAssistantScreen(
                 onBack = { navController.popBackStack() },
                 onPropertyClick = { id ->
