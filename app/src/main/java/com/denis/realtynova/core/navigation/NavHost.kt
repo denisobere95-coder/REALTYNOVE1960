@@ -101,10 +101,8 @@ fun RealtyNovaNavHost(
             val uiState by authViewModel.uiState.collectAsState()
 
             LoginScreen(
-                onLoginSuccessAction = {
-                    navController.navigate(Route.Home) {
-                        popUpTo(Route.Welcome) { inclusive = true }
-                    }
+                onLoginSuccessAction = { email, password ->
+                    authViewModel.login(email, password)
                 },
                 onRegisterClickAction = {
                     navController.navigate(Route.Register) {
@@ -119,7 +117,9 @@ fun RealtyNovaNavHost(
                 },
                 onBackClickAction = {
                     navController.popBackStack()
-                }
+                },
+                isLoading = uiState is AuthUiState.Loading,
+                errorMessage = (uiState as? AuthUiState.Error)?.message
             )
 
             LaunchedEffect(uiState) {
@@ -152,7 +152,9 @@ fun RealtyNovaNavHost(
                 },
                 onBackClickAction = {
                     navController.popBackStack()
-                }
+                },
+                isLoading = uiState is AuthUiState.Loading,
+                errorMessage = (uiState as? AuthUiState.Error)?.message
             )
 
             LaunchedEffect(uiState) {

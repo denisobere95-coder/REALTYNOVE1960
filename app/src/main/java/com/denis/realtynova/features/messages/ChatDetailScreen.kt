@@ -215,7 +215,8 @@ fun ChatDetailScreenPreview() {
         ChatDetailContent(
             uiState = ChatUiState.Success(
                 messages = previewMessages,
-                currentUser = previewUser
+                currentUser = previewUser,
+                otherUserId = "user2"
             ),
             onBack = {},
             onSendMessage = {}

@@ -77,6 +77,7 @@ data class CreateListingUiState(
 class CreateListingViewModel @Inject constructor(
     private val propertyRepository: PropertyRepository,
     private val cloudinaryManager: CloudinaryManager,
+    private val smartAlertManager: com.denis.realtynova.core.util.SmartAlertManager,
     private val contentResolver: ContentResolver
 ) : ViewModel() {
 
@@ -276,6 +277,7 @@ class CreateListingViewModel @Inject constructor(
                 // 4. Save to Repository
                 val result = propertyRepository.saveProperty(property)
                 if (result.isSuccess) {
+                    smartAlertManager.onNewPropertyAdded(property)
                     _uiState.value = _uiState.value.copy(isSuccess = true, isLoading = false)
                 } else {
                     _uiState.value = _uiState.value.copy(

@@ -9,6 +9,8 @@ import com.denis.realtynova.core.domain.model.User
 import com.denis.realtynova.core.domain.model.UserRole
 import com.denis.realtynova.core.domain.repository.AuthRepository
 import com.denis.realtynova.core.util.GoogleAuthManager
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
@@ -30,7 +32,8 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val sessionManager: SessionManager,
-    private val googleAuthManager: GoogleAuthManager
+    private val googleAuthManager: GoogleAuthManager,
+    private val firebaseAnalytics: FirebaseAnalytics
 ) : ViewModel() {
 
     private val firebaseAuth = FirebaseAuth.getInstance()
@@ -79,7 +82,12 @@ class AuthViewModel @Inject constructor(
             _uiState.value = AuthUiState.Loading
             val result = authRepository.loginWithEmail(email, password)
             _uiState.value = result.fold(
-                onSuccess = { AuthUiState.Success(it) },
+                onSuccess = { 
+                    firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN) {
+                        param(FirebaseAnalytics.Param.METHOD, "email")
+                    }
+                    AuthUiState.Success(it) 
+                },
                 onFailure = { AuthUiState.Error(it.message ?: "Authentication failed") }
             )
         }
@@ -90,7 +98,12 @@ class AuthViewModel @Inject constructor(
             _uiState.value = AuthUiState.Loading
             val result = authRepository.signUpWithEmail(email, password, phone, name)
             _uiState.value = result.fold(
-                onSuccess = { AuthUiState.Success(it) },
+                onSuccess = { 
+                    firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SIGN_UP) {
+                        param(FirebaseAnalytics.Param.METHOD, "email")
+                    }
+                    AuthUiState.Success(it) 
+                },
                 onFailure = { AuthUiState.Error(it.message ?: "Signup failed") }
             )
         }
@@ -103,7 +116,12 @@ class AuthViewModel @Inject constructor(
             if (idToken != null) {
                 val result = authRepository.signInWithGoogle(idToken)
                 _uiState.value = result.fold(
-                    onSuccess = { AuthUiState.Success(it) },
+                    onSuccess = { 
+                        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN) {
+                            param(FirebaseAnalytics.Param.METHOD, "google")
+                        }
+                        AuthUiState.Success(it) 
+                    },
                     onFailure = { AuthUiState.Error(it.message ?: "Google sign in failed") }
                 )
             } else {
@@ -236,6 +254,9 @@ class AuthViewModel @Inject constructor(
     fun setUserRole(role: UserRole) {
         viewModelScope.launch {
             sessionManager.setUserRole(role)
+            currentUser.value?.let { user ->
+                authRepository.updateUser(user.copy(role = role))
+            }
         }
     }
 

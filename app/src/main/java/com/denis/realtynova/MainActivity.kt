@@ -1,7 +1,9 @@
 package com.denis.realtynova
 
 import android.os.Bundle
+import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.Button
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -54,6 +56,17 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        // Test Crash Button
+        val crashButton = Button(this)
+        crashButton.text = "Test Crash"
+        crashButton.setOnClickListener {
+           throw RuntimeException("Test Crash") // Force a crash
+        }
+        addContentView(crashButton, ViewGroup.LayoutParams(
+               ViewGroup.LayoutParams.MATCH_PARENT,
+               ViewGroup.LayoutParams.WRAP_CONTENT))
+
         setContent {
             REALTYNOVATheme {
                 val isBiometricEnabled by sessionManager.isBiometricEnabled.collectAsState(initial = false)

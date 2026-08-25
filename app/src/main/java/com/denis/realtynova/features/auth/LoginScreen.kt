@@ -27,7 +27,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
@@ -66,11 +66,13 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun LoginScreen(
-    onLoginSuccessAction: () -> Unit,
+    onLoginSuccessAction: (String, String) -> Unit,
     onRegisterClickAction: () -> Unit,
     onGoogleSignInAction: () -> Unit = {},
     onPhoneAuthClickAction: () -> Unit = {},
-    onBackClickAction: () -> Unit = {}
+    onBackClickAction: () -> Unit = {},
+    isLoading: Boolean = false,
+    errorMessage: String? = null
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -129,7 +131,7 @@ fun LoginScreen(
                 .windowInsetsPadding(WindowInsets.safeDrawing)
         ) {
             Icon(
-                imageVector = Icons.Default.ArrowBack,
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Go back",
                 tint = Color.White
             )
@@ -294,6 +296,15 @@ fun LoginScreen(
                             }
                         )
 
+                        if (!errorMessage.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = errorMessage,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+
                         Spacer(
                             modifier = Modifier.height(10.dp)
                         )
@@ -315,7 +326,8 @@ fun LoginScreen(
                         )
 
                         RealtyNovaButton(
-                            onClick = onLoginSuccessAction,
+                            onClick = { onLoginSuccessAction(email, password) },
+                            isLoading = isLoading,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp)

@@ -9,9 +9,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.denis.realtynova" />
-                  <option name="mobileSdkAppId" value="1:943284392806:android:c968215ac9ef57e7fd6ea7" />
-                  <option name="projectId" value="realtynova-9a8c5" />
-                  <option name="projectNumber" value="943284392806" />
+                  <option name="mobileSdkAppId" value="1:387467289822:android:c9d3420070dd62e46c8e4f" />
+                  <option name="projectId" value="realtynova1" />
+                  <option name="projectNumber" value="387467289822" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

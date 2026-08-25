@@ -393,6 +393,9 @@ fun LocationStep(uiState: CreateListingUiState, onUpdate: (Double, Double, Strin
         markerState.position = LatLng(uiState.latitude, uiState.longitude)
     }
 
+    val mapProperties = remember { MapProperties(isMyLocationEnabled = false) }
+    val mapUiSettings = remember { MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false) }
+
     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Box(
             modifier = Modifier
@@ -404,6 +407,8 @@ fun LocationStep(uiState: CreateListingUiState, onUpdate: (Double, Double, Strin
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
+                properties = mapProperties,
+                uiSettings = mapUiSettings,
                 onMapClick = { latLng ->
                     onUpdate(latLng.latitude, latLng.longitude, county, address)
                 }

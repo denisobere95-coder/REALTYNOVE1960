@@ -85,6 +85,7 @@ fun PropertyDetailScreen(
             } else if (uiState.property != null) {
                 PropertyDetailContent(
                     property = uiState.property!!,
+                    aiEvaluation = uiState.aiEvaluation,
                     onBack = onBack,
                     onVrClick = { onNavigateToVirtualTour(id) }
                 )
@@ -100,6 +101,7 @@ fun PropertyDetailScreen(
 @Composable
 fun PropertyDetailContent(
     property: Property,
+    aiEvaluation: com.denis.realtynova.core.ai.PropertyEvaluation?,
     onBack: () -> Unit,
     onVrClick: () -> Unit
 ) {
@@ -114,6 +116,11 @@ fun PropertyDetailContent(
         item {
             PropertyMainInfo(property = property)
         }
+        if (aiEvaluation != null) {
+            item {
+                AiPropertyAnalysis(evaluation = aiEvaluation)
+            }
+        }
         item {
             ClassifiedGallery(images = property.images)
         }
@@ -124,10 +131,10 @@ fun PropertyDetailContent(
             PropertyDescription(property = property)
         }
         item {
-            NeighborhoodIntelligence(property = property)
+            PropertyAmenities(property = property)
         }
         item {
-            PropertyAmenities(property = property)
+            NeighborhoodIntelligence(property = property)
         }
         item {
             Spacer(modifier = Modifier.height(120.dp))
@@ -306,6 +313,58 @@ fun ClassifiedGallery(images: List<PropertyImage>) {
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun AiPropertyAnalysis(evaluation: com.denis.realtynova.core.ai.PropertyEvaluation) {
+    Column(modifier = Modifier.padding(24.dp)) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(28.dp),
+            color = Color(0xFFF3E5F5), // Light Purple for AI
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCE93D8))
+        ) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        tint = Color(0xFF7B1FA2),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Nova AI Evaluation",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF7B1FA2)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFF7B1FA2)
+                    ) {
+                        Text(
+                            text = "${evaluation.luxuryScore}/100",
+                            color = Color.White,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = evaluation.analysis,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF4A148C),
+                    lineHeight = 22.sp
+                )
             }
         }
     }

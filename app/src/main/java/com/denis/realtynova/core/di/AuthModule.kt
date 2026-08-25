@@ -1,5 +1,6 @@
 package com.denis.realtynova.core.di
 
+import android.content.Context
 import com.denis.realtynova.core.data.repository.AuthRepositoryImpl
 import com.denis.realtynova.core.data.repository.ChatRepositoryImpl
 import com.denis.realtynova.core.domain.repository.AuthRepository
@@ -47,5 +48,15 @@ abstract class AuthModule {
         @Provides
         @Singleton
         fun provideFirebaseDatabase(): FirebaseDatabase = FirebaseDatabase.getInstance()
+
+        @Provides
+        @Singleton
+        fun provideFirebaseMessaging(): com.google.firebase.messaging.FirebaseMessaging = 
+            com.google.firebase.messaging.FirebaseMessaging.getInstance()
+
+        @Provides
+        @Singleton
+        fun provideFirebaseAnalytics(@dagger.hilt.android.qualifiers.ApplicationContext context: Context): com.google.firebase.analytics.FirebaseAnalytics = 
+            com.google.firebase.analytics.FirebaseAnalytics.getInstance(context)
     }
 }

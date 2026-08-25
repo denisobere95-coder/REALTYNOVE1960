@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -42,6 +43,7 @@ fun RealtyNovaButton(
     modifier: Modifier = Modifier,
     variant: ButtonVariant = ButtonVariant.Premium,
     enabled: Boolean = true,
+    isLoading: Boolean = false,
     contentPadding: PaddingValues = PaddingValues(horizontal = 24.dp, vertical = 14.dp),
     content: @Composable RowScope.() -> Unit
 ) {
@@ -101,7 +103,7 @@ fun RealtyNovaButton(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
-                enabled = enabled,
+                enabled = enabled && !isLoading,
                 onClick = {
                     haptic()
                     onClick()
@@ -109,18 +111,26 @@ fun RealtyNovaButton(
             ),
         contentAlignment = Alignment.Center
     ) {
-        androidx.compose.material3.ProvideTextStyle(
-            value = MaterialTheme.typography.labelLarge.copy(
+        if (isLoading) {
+            androidx.compose.material3.CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
                 color = contentColor,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                strokeWidth = 2.dp
             )
-        ) {
-            Row(
-                modifier = Modifier.padding(contentPadding),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                content = content
-            )
+        } else {
+            androidx.compose.material3.ProvideTextStyle(
+                value = MaterialTheme.typography.labelLarge.copy(
+                    color = contentColor,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(contentPadding),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    content = content
+                )
+            }
         }
     }
 }

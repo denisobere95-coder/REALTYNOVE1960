@@ -27,7 +27,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -74,7 +74,9 @@ fun RegisterScreen(
     onLoginClickAction: () -> Unit,
     onGoogleSignInAction: () -> Unit = {},
     onPhoneAuthClickAction: () -> Unit,
-    onBackClickAction: () -> Unit
+    onBackClickAction: () -> Unit,
+    isLoading: Boolean = false,
+    errorMessage: String? = null
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -141,7 +143,7 @@ fun RegisterScreen(
                 .windowInsetsPadding(WindowInsets.safeDrawing)
         ) {
             Icon(
-                imageVector = Icons.Default.ArrowBack,
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Go back",
                 tint = Color.White
             )
@@ -448,6 +450,15 @@ fun RegisterScreen(
                             )
                         }
 
+                        if (!errorMessage.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = errorMessage,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+
                         Spacer(
                             modifier = Modifier.height(24.dp)
                         )
@@ -455,6 +466,7 @@ fun RegisterScreen(
                         RealtyNovaButton(
                             onClick = { onRegisterSuccessAction(name, email, password, phoneNumber) },
                             variant = ButtonVariant.Premium,
+                            isLoading = isLoading,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp)

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">REALTYNOVA</string>
+    <!-- Replace with your actual Web Client ID from Firebase Console -->
+    <string name="google_web_client_id">387467289822-xxxx.apps.googleusercontent.com</string>
 </resources>

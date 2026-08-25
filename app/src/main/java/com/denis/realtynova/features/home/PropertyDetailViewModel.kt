@@ -17,13 +17,15 @@ data class PropertyDetailUiState(
     val property: Property? = null,
     val isFavorite: Boolean = false,
     val isLoading: Boolean = false,
+    val aiEvaluation: com.denis.realtynova.core.ai.PropertyEvaluation? = null,
     val error: String? = null
 )
 
 @HiltViewModel
 class PropertyDetailViewModel @Inject constructor(
     private val propertyRepository: PropertyRepository,
-    private val savedRepository: SavedRepository
+    private val savedRepository: SavedRepository,
+    private val propertyEvaluator: com.denis.realtynova.core.ai.PropertyEvaluator
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PropertyDetailUiState())
@@ -42,6 +44,12 @@ class PropertyDetailViewModel @Inject constructor(
                     property = property,
                     isFavorite = isFavorite
                 )
+
+                // Trigger AI Evaluation
+                property?.let { 
+                    val evaluation = propertyEvaluator.evaluateProperty(it)
+                    _uiState.value = _uiState.value.copy(aiEvaluation = evaluation)
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

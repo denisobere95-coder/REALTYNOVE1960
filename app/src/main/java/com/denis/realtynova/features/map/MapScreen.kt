@@ -74,15 +74,28 @@ fun MapScreen(
         position = CameraPosition.fromLatLngZoom(initialLocation, 11f)
     }
 
+    val mapProperties = remember(isSatellite) {
+        MapProperties(
+            isMyLocationEnabled = false,
+            mapType = if (isSatellite) MapType.SATELLITE else MapType.NORMAL
+        )
+    }
+    
+    val mapUiSettings = remember {
+        MapUiSettings(
+            zoomControlsEnabled = false,
+            myLocationButtonEnabled = false,
+            compassEnabled = false,
+            mapToolbarEnabled = false
+        )
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
-            properties = MapProperties(
-                isMyLocationEnabled = false,
-                mapType = if (isSatellite) MapType.SATELLITE else MapType.NORMAL
-            ),
-            uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false, compassEnabled = false, mapToolbarEnabled = false),
+            properties = mapProperties,
+            uiSettings = mapUiSettings,
             onMapLoaded = { mapReady = true },
             onMapClick = { latLng ->
                 viewModel.onPropertySelected(null)

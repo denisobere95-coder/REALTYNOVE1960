@@ -9,15 +9,18 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.denis.realtynova.R
+
 @Singleton
 class GoogleAuthManager @Inject constructor() {
 
     suspend fun signIn(context: Context): String? {
         val credentialManager = CredentialManager.create(context)
+        val serverClientId = context.getString(R.string.google_web_client_id)
         
         val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
-            .setServerClientId("YOUR_GOOGLE_SERVER_CLIENT_ID") 
+            .setServerClientId(serverClientId) 
             .setAutoSelectEnabled(true)
             .build()
 
