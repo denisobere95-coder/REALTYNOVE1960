@@ -3,6 +3,7 @@ package com.denis.realtynova.core.data.repository
 import com.denis.realtynova.core.domain.model.User
 import com.denis.realtynova.core.domain.model.UserRole
 import com.denis.realtynova.core.domain.repository.AuthRepository
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -19,8 +20,16 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val analytics: FirebaseAnalytics
 ) : AuthRepository {
+
+    private fun logAuthEvent(method: String) {
+        val bundle = android.os.Bundle().apply {
+            putString(FirebaseAnalytics.Param.METHOD, method)
+        }
+        analytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
+    }
 
     override val currentUser: Flow<User?> = callbackFlow {
         val listener = FirebaseAuth.AuthStateListener { auth ->
@@ -53,6 +62,7 @@ class AuthRepositoryImpl @Inject constructor(
             val firebaseUser = result.user ?: throw Exception("User not found after login")
             
             val user = fetchUserFromFirestore(firebaseUser.uid) ?: firebaseUser.toDomainUser()
+            logAuthEvent("email")
             Result.success(user)
         } catch (e: Exception) {
             timber.log.Timber.e(e, "Login failed: ${e.message}")
@@ -97,7 +107,7 @@ class AuthRepositoryImpl @Inject constructor(
                 user = firebaseUser.toDomainUser()
                 saveUserToFirestore(user)
             }
-            
+            logAuthEvent("google")
             Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)

@@ -9,4 +9,6 @@ interface ChatRepository {
     suspend fun sendMessage(chatId: String, message: Message): Result<Unit>
     fun getRecentChats(userId: String): Flow<List<RecentChat>>
     fun createChatId(userId1: String, userId2: String): String
+    fun getTypingStatus(chatId: String, otherUserId: String): Flow<Boolean>
+    suspend fun setTypingStatus(chatId: String, userId: String, isTyping: Boolean)
 }

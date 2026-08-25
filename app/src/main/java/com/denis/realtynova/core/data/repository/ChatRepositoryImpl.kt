@@ -21,6 +21,7 @@ class ChatRepositoryImpl @Inject constructor(
 
     private val messagesRef = database.getReference("messages")
     private val chatsRef = database.getReference("chats")
+    private val typingRef = database.getReference("typing")
 
     override fun getMessages(chatId: String): Flow<List<Message>> = callbackFlow {
         val listener = object : ValueEventListener {
@@ -73,6 +74,23 @@ class ChatRepositoryImpl @Inject constructor(
 
     override fun createChatId(userId1: String, userId2: String): String {
         return if (userId1 < userId2) "${userId1}_${userId2}" else "${userId2}_${userId1}"
+    }
+
+    override fun getTypingStatus(chatId: String, otherUserId: String): Flow<Boolean> = callbackFlow {
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                trySend(snapshot.getValue(Boolean::class.java) ?: false)
+            }
+            override fun onCancelled(error: DatabaseError) {
+                close(error.toException())
+            }
+        }
+        typingRef.child(chatId).child(otherUserId).addValueEventListener(listener)
+        awaitClose { typingRef.child(chatId).child(otherUserId).removeEventListener(listener) }
+    }
+
+    override suspend fun setTypingStatus(chatId: String, userId: String, isTyping: Boolean) {
+        typingRef.child(chatId).child(userId).setValue(isTyping).await()
     }
 }
 
