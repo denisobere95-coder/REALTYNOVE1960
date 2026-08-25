@@ -278,9 +278,24 @@ class AuthViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
+            firebaseAnalytics.logEvent("logout", null)
             authRepository.logout()
             sessionManager.clearSession()
             _uiState.value = AuthUiState.Idle
+        }
+    }
+
+    fun deleteAccount() {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            val result = authRepository.deleteAccount()
+            _uiState.value = result.fold(
+                onSuccess = { 
+                    sessionManager.clearSession()
+                    AuthUiState.Idle 
+                },
+                onFailure = { AuthUiState.Error(it.message ?: "Account deletion failed") }
+            )
         }
     }
 

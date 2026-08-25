@@ -138,7 +138,14 @@ class AuthRepositoryImpl @Inject constructor(
         return try {
             val credential = FacebookAuthProvider.getCredential(token)
             val result = firebaseAuth.signInWithCredential(credential).await()
-            val user = result.user?.toDomainUser() ?: throw Exception("Facebook sign in failed")
+            val firebaseUser = result.user ?: throw Exception("Facebook sign in failed")
+            
+            var user = fetchUserFromFirestore(firebaseUser.uid)
+            if (user == null) {
+                user = firebaseUser.toDomainUser()
+                saveUserToFirestore(user)
+            }
+            logAuthEvent("facebook")
             Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)
@@ -149,7 +156,14 @@ class AuthRepositoryImpl @Inject constructor(
         return try {
             val credential = PhoneAuthProvider.getCredential(verificationId, otp)
             val result = firebaseAuth.signInWithCredential(credential).await()
-            val user = result.user?.toDomainUser() ?: throw Exception("Phone sign in failed")
+            val firebaseUser = result.user ?: throw Exception("Phone sign in failed")
+            
+            var user = fetchUserFromFirestore(firebaseUser.uid)
+            if (user == null) {
+                user = firebaseUser.toDomainUser().copy(phoneNumber = phoneNumber)
+                saveUserToFirestore(user)
+            }
+            logAuthEvent("phone")
             Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)
