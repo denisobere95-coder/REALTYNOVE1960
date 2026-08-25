@@ -163,8 +163,13 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun resetPassword(email: String): Result<Unit> {
         return try {
             firebaseAuth.sendPasswordResetEmail(email).await()
+            val bundle = android.os.Bundle().apply {
+                putString(FirebaseAnalytics.Param.METHOD, "email")
+            }
+            analytics.logEvent("password_reset_sent", bundle)
             Result.success(Unit)
         } catch (e: Exception) {
+            timber.log.Timber.e(e, "Password reset failed: ${e.message}")
             Result.failure(e)
         }
     }

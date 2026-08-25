@@ -8,21 +8,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -32,17 +19,8 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -51,6 +29,13 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.autofill.AutofillNode
+import androidx.compose.ui.autofill.AutofillType
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalAutofill
+import androidx.compose.ui.platform.LocalAutofillTree
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -68,17 +53,22 @@ import kotlinx.coroutines.delay
 fun LoginScreen(
     onLoginSuccessAction: (String, String) -> Unit,
     onRegisterClickAction: () -> Unit,
+    onForgotPasswordAction: (String) -> Unit = {},
     onGoogleSignInAction: () -> Unit = {},
     onPhoneAuthClickAction: () -> Unit = {},
     onBackClickAction: () -> Unit = {},
     isLoading: Boolean = false,
-    errorMessage: String? = null
+    errorMessage: String? = null,
+    successMessage: String? = null
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
     var showContent by remember { mutableStateOf(false) }
+    var showForgotDialog by remember { mutableStateOf(false) }
+
+    val haptic = LocalHapticFeedback.current
 
     val logoScale = remember {
         Animatable(0.82f)
@@ -249,6 +239,11 @@ fun LoginScreen(
                                     imageVector = Icons.Default.Email,
                                     contentDescription = null
                                 )
+                            },
+                            modifier = Modifier.onFocusChanged { focusState ->
+                                if (focusState.isFocused) {
+                                    // Autofill logic could go here
+                                }
                             }
                         )
 
@@ -305,6 +300,16 @@ fun LoginScreen(
                             )
                         }
 
+                        if (!successMessage.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = successMessage,
+                                color = Color(0xFF2E7D32),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
                         Spacer(
                             modifier = Modifier.height(10.dp)
                         )
@@ -317,7 +322,11 @@ fun LoginScreen(
                                 text = "Forgot password?",
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.SemiBold,
-                                style = MaterialTheme.typography.labelLarge
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.clickable {
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                    showForgotDialog = true
+                                }
                             )
                         }
 
@@ -326,7 +335,10 @@ fun LoginScreen(
                         )
 
                         RealtyNovaButton(
-                            onClick = { onLoginSuccessAction(email, password) },
+                            onClick = { 
+                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                                onLoginSuccessAction(email, password) 
+                            },
                             isLoading = isLoading,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -377,10 +389,16 @@ fun LoginScreen(
                         )
 
                         SocialAuthSection(
-                            onGoogleClick = onGoogleSignInAction,
+                            onGoogleClick = {
+                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                                onGoogleSignInAction()
+                            },
                             onFacebookClick = { },
                             onInstagramClick = { },
-                            onPhoneClick = onPhoneAuthClickAction
+                            onPhoneClick = {
+                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                                onPhoneAuthClickAction()
+                            }
                         )
 
                         Spacer(
@@ -400,23 +418,8 @@ fun LoginScreen(
                             Text(
                                 text = "Create account",
                                 color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        Spacer(
-                            modifier = Modifier.height(12.dp)
-                        )
-
-                        RealtyNovaButton(
-                            onClick = onRegisterClickAction,
-                            variant = com.denis.realtynova.core.designsystem.components.ButtonVariant.Secondary,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "CREATE AN ACCOUNT",
                                 fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
+                                modifier = Modifier.clickable { onRegisterClickAction() }
                             )
                         }
                     }
@@ -434,5 +437,41 @@ fun LoginScreen(
                 letterSpacing = 1.5.sp
             )
         }
+    }
+
+    if (showForgotDialog) {
+        AlertDialog(
+            onDismissRequest = { showForgotDialog = false },
+            title = { Text("Reset Password", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text("Enter your email address to receive a password reset link.")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    RealtyNovaTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = "Email address",
+                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) }
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onForgotPasswordAction(email)
+                        showForgotDialog = false
+                    }
+                ) {
+                    Text("SEND RESET LINK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showForgotDialog = false }) {
+                    Text("CANCEL")
+                }
+            },
+            shape = RoundedCornerShape(24.dp),
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     }
 }

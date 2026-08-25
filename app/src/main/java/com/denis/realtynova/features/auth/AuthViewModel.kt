@@ -93,12 +93,13 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun signUp(name: String, email: String, password: String, phone: String) {
+    fun signUp(name: String, email: String, password: String, phone: String, role: UserRole = UserRole.BUYER) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             val result = authRepository.signUpWithEmail(email, password, phone, name)
             _uiState.value = result.fold(
                 onSuccess = { 
+                    setUserRole(role)
                     firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SIGN_UP) {
                         param(FirebaseAnalytics.Param.METHOD, "email")
                     }
@@ -260,6 +261,21 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun resetPassword(email: String) {
+        if (email.isBlank()) {
+            _uiState.value = AuthUiState.Error("Please enter your email to reset password.")
+            return
+        }
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            val result = authRepository.resetPassword(email)
+            _uiState.value = result.fold(
+                onSuccess = { AuthUiState.SuccessMessage("Password reset email sent to $email") },
+                onFailure = { AuthUiState.Error(it.message ?: "Failed to send reset email") }
+            )
+        }
+    }
+
     fun logout() {
         viewModelScope.launch {
             authRepository.logout()
@@ -278,5 +294,6 @@ sealed interface AuthUiState {
     data object Loading : AuthUiState
     data class CodeSent(val phoneNumber: String) : AuthUiState
     data class Success(val user: User) : AuthUiState
+    data class SuccessMessage(val message: String) : AuthUiState
     data class Error(val message: String) : AuthUiState
 }

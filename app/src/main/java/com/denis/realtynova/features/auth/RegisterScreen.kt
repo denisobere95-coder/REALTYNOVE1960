@@ -70,7 +70,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun RegisterScreen(
-    onRegisterSuccessAction: (String, String, String, String) -> Unit,
+    onRegisterSuccessAction: (String, String, String, String, String) -> Unit,
     onLoginClickAction: () -> Unit,
     onGoogleSignInAction: () -> Unit = {},
     onPhoneAuthClickAction: () -> Unit,
@@ -82,6 +82,7 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf("BUYER") }
 
     var passwordVisible by remember { mutableStateOf(false) }
     var showContent by remember { mutableStateOf(false) }
@@ -247,52 +248,6 @@ fun RegisterScreen(
                         )
 
                         Spacer(
-                            modifier = Modifier.height(26.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-
-                            RegistrationStep(
-                                number = "1",
-                                title = "Account",
-                                active = true
-                            )
-
-                            Spacer(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(1.dp)
-                                    .background(
-                                        MaterialTheme.colorScheme.outlineVariant
-                                    )
-                            )
-
-                            RegistrationStep(
-                                number = "2",
-                                title = "Verify",
-                                active = false
-                            )
-
-                            Spacer(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(1.dp)
-                                    .background(
-                                        MaterialTheme.colorScheme.outlineVariant
-                                    )
-                            )
-
-                            RegistrationStep(
-                                number = "3",
-                                title = "Explore",
-                                active = false
-                            )
-                        }
-
-                        Spacer(
                             modifier = Modifier.height(28.dp)
                         )
 
@@ -391,6 +346,35 @@ fun RegisterScreen(
                             }
                         )
 
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "I am a:",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            RoleOption(
+                                label = "Buyer / Renter",
+                                isSelected = selectedRole == "BUYER",
+                                onClick = { selectedRole = "BUYER" },
+                                modifier = Modifier.weight(1f)
+                            )
+                            RoleOption(
+                                label = "Property Agent",
+                                isSelected = selectedRole == "AGENT",
+                                onClick = { selectedRole = "AGENT" },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
                         AnimatedVisibility(
                             visible = password.isNotEmpty()
                         ) {
@@ -464,7 +448,7 @@ fun RegisterScreen(
                         )
 
                         RealtyNovaButton(
-                            onClick = { onRegisterSuccessAction(name, email, password, phoneNumber) },
+                            onClick = { onRegisterSuccessAction(name, email, password, phoneNumber, selectedRole) },
                             variant = ButtonVariant.Premium,
                             isLoading = isLoading,
                             modifier = Modifier
@@ -581,49 +565,27 @@ fun RegisterScreen(
 }
 
 @Composable
-private fun RegistrationStep(
-    number: String,
-    title: String,
-    active: Boolean
+private fun RoleOption(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(48.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-
-        Box(
-            modifier = Modifier
-                .size(30.dp)
-                .background(
-                    color = if (active) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.surfaceVariant
-                    },
-                    shape = RoundedCornerShape(50)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(contentAlignment = Alignment.Center) {
             Text(
-                text = number,
-                color = if (active) {
-                    MaterialTheme.colorScheme.onPrimary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.labelMedium
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
-
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }
 

@@ -90,6 +90,16 @@ fun RealtyNovaNavHost(
         }
 
         composable<Route.Welcome> {
+            val currentUser by authViewModel.currentUser.collectAsState()
+            
+            LaunchedEffect(currentUser) {
+                if (currentUser != null) {
+                    navController.navigate(Route.Home) {
+                        popUpTo(Route.Welcome) { inclusive = true }
+                    }
+                }
+            }
+
             WelcomeScreen(
                 onNavigateToLogin = { navController.navigate(Route.Login) },
                 onNavigateToRegister = { navController.navigate(Route.Register) }
@@ -109,6 +119,9 @@ fun RealtyNovaNavHost(
                         launchSingleTop = true
                     }
                 },
+                onForgotPasswordAction = { email ->
+                    authViewModel.resetPassword(email)
+                },
                 onGoogleSignInAction = {
                     authViewModel.signInWithGoogle(context)
                 },
@@ -119,7 +132,8 @@ fun RealtyNovaNavHost(
                     navController.popBackStack()
                 },
                 isLoading = uiState is AuthUiState.Loading,
-                errorMessage = (uiState as? AuthUiState.Error)?.message
+                errorMessage = (uiState as? AuthUiState.Error)?.message,
+                successMessage = (uiState as? AuthUiState.SuccessMessage)?.message
             )
 
             LaunchedEffect(uiState) {
@@ -136,8 +150,8 @@ fun RealtyNovaNavHost(
             val uiState by authViewModel.uiState.collectAsState()
 
             RegisterScreen(
-                onRegisterSuccessAction = { name, email, password, phone ->
-                    authViewModel.signUp(name, email, password, phone)
+                onRegisterSuccessAction = { name, email, password, phone, role ->
+                    authViewModel.signUp(name, email, password, phone, com.denis.realtynova.core.domain.model.UserRole.valueOf(role))
                 },
                 onLoginClickAction = {
                     navController.navigate(Route.Login) {
