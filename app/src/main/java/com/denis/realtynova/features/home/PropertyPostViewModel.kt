@@ -3,24 +3,23 @@ package com.denis.realtynova.features.home
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.denis.realtynova.core.data.manager.StorageManager
 import com.denis.realtynova.core.domain.model.Property
 import com.denis.realtynova.core.domain.model.PropertyImage
 import com.denis.realtynova.core.domain.model.PropertyImageType
 import com.denis.realtynova.core.domain.repository.PropertyRepository
-import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class PropertyPostViewModel @Inject constructor(
     private val propertyRepository: PropertyRepository,
-    private val storage: FirebaseStorage
+    private val storageManager: StorageManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PropertyPostUiState())
@@ -82,10 +81,8 @@ class PropertyPostViewModel @Inject constructor(
     }
 
     private suspend fun uploadImages(uris: List<Uri>): List<String> {
-        return uris.map { uri ->
-            val ref = storage.reference.child("properties/${UUID.randomUUID()}")
-            ref.putFile(uri).await()
-            ref.downloadUrl.await().toString()
+        return uris.mapNotNull { uri ->
+            storageManager.uploadImage(uri, "properties").getOrNull()
         }
     }
 }

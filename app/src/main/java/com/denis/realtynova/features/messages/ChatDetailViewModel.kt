@@ -17,7 +17,8 @@ sealed interface ChatUiState {
     data class Success(
         val messages: List<Message>,
         val currentUser: User?,
-        val otherUserId: String
+        val otherUserId: String,
+        val isOtherUserTyping: Boolean = false
     ) : ChatUiState
     data class Error(val message: String) : ChatUiState
 }
@@ -48,12 +49,35 @@ class ChatDetailViewModel @Inject constructor(
             
             val chatId = chatRepository.createChatId(currentUser.id, otherUserId)
             
+            // Collect typing status
+            launch {
+                chatRepository.getTypingStatus(chatId, otherUserId).collect { isTyping ->
+                    val currentState = _uiState.value
+                    if (currentState is ChatUiState.Success) {
+                        _uiState.value = currentState.copy(isOtherUserTyping = isTyping)
+                    }
+                }
+            }
+
             chatRepository.getMessages(chatId)
                 .onStart { _uiState.value = ChatUiState.Loading }
                 .catch { e -> _uiState.value = ChatUiState.Error(e.message ?: "Unknown error") }
                 .collect { messages ->
-                    _uiState.value = ChatUiState.Success(messages, currentUser, otherUserId)
+                    val currentState = _uiState.value
+                    if (currentState is ChatUiState.Success) {
+                        _uiState.value = currentState.copy(messages = messages, currentUser = currentUser)
+                    } else {
+                        _uiState.value = ChatUiState.Success(messages, currentUser, otherUserId)
+                    }
                 }
+        }
+    }
+
+    fun setTyping(isTyping: Boolean) {
+        val currentUser = (uiState.value as? ChatUiState.Success)?.currentUser ?: return
+        viewModelScope.launch {
+            val chatId = chatRepository.createChatId(currentUser.id, otherUserId)
+            chatRepository.setTypingStatus(chatId, currentUser.id, isTyping)
         }
     }
 

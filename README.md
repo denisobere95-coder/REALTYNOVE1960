@@ -4,10 +4,13 @@ A luxury property concierge and marketplace for Kenyan real estate.
 
 ## Features
 - **AI Property Assistant**: Curated property suggestions powered by Gemini.
-- **Real-time Chat**: Connect with property agents instantly via Firebase Realtime Database.
-- **Luxury UI**: Premium design language featuring Emerald, Gold, and Navy tones.
-- **Property Maps**: Integrated Google Maps for precise location discovery.
-- **Identity Verification**: Secure authentication and verified user badges.
+- **Real-time Chat**: Connect with property agents instantly via Firebase Realtime Database (includes **Typing Indicators**).
+- **Luxury UI**: Premium design language featuring Emerald, Gold, and Navy tones with **Dark Mode** support.
+- **Property Maps**: Integrated Google Maps with **Premium Styling**, directions, and coordinate discovery.
+- **Identity Verification**: Secure authentication, Firestore user profiles, and verified user badges.
+
+## 🛡️ Security
+Backend security rules for Firestore, Realtime Database, and Storage are documented in [FIREBASE_RULES.md](FIREBASE_RULES.md).
 
 ## Tech Stack
 - **Kotlin & Jetpack Compose**: Modern Android development.

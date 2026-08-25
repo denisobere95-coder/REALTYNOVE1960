@@ -1,10 +1,13 @@
 package com.denis.realtynova.features.messages
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -25,6 +28,7 @@ import com.denis.realtynova.core.designsystem.theme.Graphite
 import com.denis.realtynova.core.designsystem.theme.REALTYNOVATheme
 import com.denis.realtynova.core.domain.model.Message
 import com.denis.realtynova.core.domain.model.User
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -38,7 +42,8 @@ fun ChatDetailScreen(
     ChatDetailContent(
         uiState = uiState,
         onBack = onBack,
-        onSendMessage = { viewModel.sendMessage(it) }
+        onSendMessage = { viewModel.sendMessage(it) },
+        onTyping = { viewModel.setTyping(it) }
     )
 }
 
@@ -47,10 +52,22 @@ fun ChatDetailScreen(
 private fun ChatDetailContent(
     uiState: ChatUiState,
     onBack: () -> Unit,
-    onSendMessage: (String) -> Unit
+    onSendMessage: (String) -> Unit,
+    onTyping: (Boolean) -> Unit
 ) {
     var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
+
+    // Typing debounce
+    LaunchedEffect(messageText) {
+        if (messageText.isNotEmpty()) {
+            onTyping(true)
+            delay(2000)
+            onTyping(false)
+        } else {
+            onTyping(false)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -132,9 +149,42 @@ private fun ChatDetailContent(
                         val isCurrentUser = message.senderId == state.currentUser?.id
                         MessageBubble(message = message, isCurrentUser = isCurrentUser)
                     }
+
+                    if (state.isOtherUserTyping) {
+                        item {
+                            TypingIndicator(modifier = Modifier.padding(start = 8.dp, bottom = 8.dp))
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun TypingIndicator(modifier: Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        repeat(3) { index ->
+            val dotAlpha by rememberInfiniteTransition().animateFloat(
+                initialValue = 0.3f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(600, delayMillis = index * 200),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "TypingDot"
+            )
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(Color.Gray.copy(alpha = dotAlpha), CircleShape)
+            )
+        }
+        Text("typing...", fontSize = 12.sp, color = Color.Gray, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
     }
 }
 
@@ -216,10 +266,12 @@ fun ChatDetailScreenPreview() {
             uiState = ChatUiState.Success(
                 messages = previewMessages,
                 currentUser = previewUser,
-                otherUserId = "user2"
+                otherUserId = "user2",
+                isOtherUserTyping = true
             ),
             onBack = {},
-            onSendMessage = {}
+            onSendMessage = {},
+            onTyping = {}
         )
     }
 }
