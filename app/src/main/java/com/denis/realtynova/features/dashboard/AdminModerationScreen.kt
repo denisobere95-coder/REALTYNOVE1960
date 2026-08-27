@@ -19,7 +19,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.denis.realtynova.core.designsystem.components.CreativeBackground
+import com.denis.realtynova.core.designsystem.components.BackgroundVariant
+import com.denis.realtynova.R
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
+import com.denis.realtynova.core.designsystem.theme.ChampagneGold
 import com.denis.realtynova.core.designsystem.theme.REALTYNOVATheme
 import com.denis.realtynova.core.domain.model.Property
 
@@ -31,14 +35,20 @@ fun AdminModerationScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    AdminModerationContent(
-        uiState = uiState,
-        onNavigateToDetail = onNavigateToDetail,
-        onBack = onBack,
-        onApproveListing = { viewModel.approveListing(it) },
-        onRejectListing = { viewModel.rejectListing(it) },
-        onClearMessage = { viewModel.clearMessage() }
-    )
+    CreativeBackground(
+        imageRes = R.drawable.img_30,
+        variant = BackgroundVariant.DARK,
+        overlayAlpha = 0.9f
+    ) {
+        AdminModerationContent(
+            uiState = uiState,
+            onNavigateToDetail = onNavigateToDetail,
+            onBack = onBack,
+            onApproveListing = { viewModel.approveListing(it) },
+            onRejectListing = { viewModel.rejectListing(it) },
+            onClearMessage = { viewModel.clearMessage() }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,13 +71,15 @@ fun AdminModerationContent(
     }
 
     Scaffold(
+        containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Moderation Queue", fontWeight = FontWeight.Bold) },
+                title = { Text("Moderation Queue", fontWeight = FontWeight.Bold, color = Color.White) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 }
             )
@@ -111,22 +123,22 @@ fun ModerationItem(
 ) {
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        color = Color.White.copy(alpha = 0.08f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.12f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = property.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(text = property.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
                     Text(
                         text = "${property.currency} ${property.price}",
-                        color = DeepEmerald,
+                        color = ChampagneGold,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 14.sp
                     )
                 }
                 IconButton(onClick = onView) {
-                    Icon(imageVector = Icons.Default.Visibility, contentDescription = "View Details", tint = DeepEmerald)
+                    Icon(imageVector = Icons.Default.Visibility, contentDescription = "View Details", tint = Color.White.copy(alpha = 0.7f))
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -144,9 +156,9 @@ fun ModerationItem(
                 OutlinedButton(
                     onClick = onReject,
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                     shape = RoundedCornerShape(8.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD32F2F))
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
                 ) {
                     Icon(imageVector = Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))

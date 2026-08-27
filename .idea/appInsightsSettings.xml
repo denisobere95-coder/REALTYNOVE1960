@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.denis.realtynova" />
-                  <option name="mobileSdkAppId" value="1:387467289822:android:c9d3420070dd62e46c8e4f" />
-                  <option name="projectId" value="realtynova1" />
-                  <option name="projectNumber" value="387467289822" />
+                  <option name="appId" value="com.denis.realtynova.c3" />
+                  <option name="mobileSdkAppId" value="1:1098557082067:android:21c640383f155f9df34726" />
+                  <option name="projectId" value="realtynovac3" />
+                  <option name="projectNumber" value="1098557082067" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

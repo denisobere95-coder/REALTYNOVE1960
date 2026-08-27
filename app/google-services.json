@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "387467289822",
-    "project_id": "realtynova1",
-    "storage_bucket": "realtynova1.firebasestorage.app"
+    "project_number": "1098557082067",
+    "project_id": "realtynovac3",
+    "storage_bucket": "realtynovac3.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:387467289822:android:c9d3420070dd62e46c8e4f",
+        "mobilesdk_app_id": "1:1098557082067:android:21c640383f155f9df34726",
         "android_client_info": {
-          "package_name": "com.denis.realtynova"
+          "package_name": "com.denis.realtynova.c3"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyB_078J3na7VP2p1SbhC-fD0lJq3C536nw"
+          "current_key": "AIzaSyCRocxVftWlZ9P7E5VvrttszF0AZm5FytQ"
         }
       ],
       "services": {

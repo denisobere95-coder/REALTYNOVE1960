@@ -1,9 +1,11 @@
 package com.denis.realtynova.core.domain.repository
 
+import com.denis.realtynova.core.domain.model.AuthState
 import com.denis.realtynova.core.domain.model.User
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
+    val authState: Flow<AuthState>
     val currentUser: Flow<User?>
     
     suspend fun loginWithEmail(email: String, password: String): Result<User>
@@ -15,4 +17,6 @@ interface AuthRepository {
     suspend fun resetPassword(email: String): Result<Unit>
     suspend fun deleteAccount(): Result<Unit>
     suspend fun updateUser(user: User): Result<Unit>
+    suspend fun setOnlineStatus(isOnline: Boolean)
+    fun isFirebaseConfigured(): Boolean
 }

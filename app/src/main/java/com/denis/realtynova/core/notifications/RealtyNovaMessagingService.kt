@@ -17,19 +17,20 @@ class RealtyNovaMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Timber.d("New FCM token: $token")
-        // In a real app, send token to your backend
+        Timber.d("New FCM Token: $token")
+        // Upload token to backend if needed
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         
-        message.notification?.let {
-            showNotification(it.title ?: "RealtyNova", it.body ?: "")
-        }
+        val title = message.notification?.title ?: message.data["title"] ?: "New Alert"
+        val body = message.notification?.body ?: message.data["body"] ?: "Check out the latest update in RealtyNova."
+        
+        showNotification(title, body)
     }
 
-    private fun showNotification(title: String, message: String) {
+    private fun showNotification(title: String, body: String) {
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
@@ -41,9 +42,9 @@ class RealtyNovaMessagingService : FirebaseMessagingService() {
 
         val channelId = "property_alerts"
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // Placeholder
+            .setSmallIcon(R.drawable.ic_launcher_foreground) // Replace with proper app icon
             .setContentTitle(title)
-            .setContentText(message)
+            .setContentText(body)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -59,6 +60,6 @@ class RealtyNovaMessagingService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        notificationManager.notify(0, notificationBuilder.build())
+        notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
     }
 }

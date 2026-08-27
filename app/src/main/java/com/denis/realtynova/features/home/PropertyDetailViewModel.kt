@@ -25,7 +25,8 @@ data class PropertyDetailUiState(
 class PropertyDetailViewModel @Inject constructor(
     private val propertyRepository: PropertyRepository,
     private val savedRepository: SavedRepository,
-    private val propertyEvaluator: com.denis.realtynova.core.ai.PropertyEvaluator
+    private val propertyEvaluator: com.denis.realtynova.core.ai.PropertyEvaluator,
+    private val analytics: com.google.firebase.analytics.FirebaseAnalytics
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PropertyDetailUiState())
@@ -45,9 +46,18 @@ class PropertyDetailViewModel @Inject constructor(
                     isFavorite = isFavorite
                 )
 
-                // Trigger AI Evaluation
-                property?.let { 
-                    val evaluation = propertyEvaluator.evaluateProperty(it)
+                // Log Creative Analytics Event
+                property?.let { p ->
+                    val bundle = android.os.Bundle().apply {
+                        putString(com.google.firebase.analytics.FirebaseAnalytics.Param.ITEM_ID, p.id)
+                        putString(com.google.firebase.analytics.FirebaseAnalytics.Param.ITEM_NAME, p.title)
+                        putString(com.google.firebase.analytics.FirebaseAnalytics.Param.ITEM_CATEGORY, p.type)
+                        putDouble(com.google.firebase.analytics.FirebaseAnalytics.Param.VALUE, p.price)
+                        putString(com.google.firebase.analytics.FirebaseAnalytics.Param.CURRENCY, p.currency)
+                    }
+                    analytics.logEvent(com.google.firebase.analytics.FirebaseAnalytics.Event.VIEW_ITEM, bundle)
+                    
+                    val evaluation = propertyEvaluator.evaluateProperty(p)
                     _uiState.value = _uiState.value.copy(aiEvaluation = evaluation)
                 }
             } catch (e: Exception) {

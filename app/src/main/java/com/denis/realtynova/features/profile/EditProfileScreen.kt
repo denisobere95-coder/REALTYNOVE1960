@@ -27,6 +27,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.denis.realtynova.core.designsystem.components.CreativeBackground
+import com.denis.realtynova.core.designsystem.components.BackgroundVariant
+import com.denis.realtynova.R
 import com.denis.realtynova.core.designsystem.components.RealtyNovaButton
 import com.denis.realtynova.core.designsystem.components.RealtyNovaTextField
 import com.denis.realtynova.core.designsystem.theme.ChampagneGold
@@ -56,15 +59,21 @@ fun EditProfileScreen(
         }
     }
 
-    EditProfileContent(
-        user = user,
-        isBiometricEnabled = isBiometricEnabled,
-        isScreenshotPreventionEnabled = isScreenshotPreventionEnabled,
-        isBiometricAvailable = isBiometricAvailable,
-        onBack = onBack,
-        onBiometricToggle = { viewModel.setBiometricEnabled(it) },
-        onScreenshotPreventionToggle = { viewModel.setScreenshotPreventionEnabled(it) }
-    )
+    CreativeBackground(
+        imageRes = R.drawable.img_15,
+        variant = BackgroundVariant.EMERALD,
+        overlayAlpha = 0.85f
+    ) {
+        EditProfileContent(
+            user = user,
+            isBiometricEnabled = isBiometricEnabled,
+            isScreenshotPreventionEnabled = isScreenshotPreventionEnabled,
+            isBiometricAvailable = isBiometricAvailable,
+            onBack = onBack,
+            onBiometricToggle = { viewModel.setBiometricEnabled(it) },
+            onScreenshotPreventionToggle = { viewModel.setScreenshotPreventionEnabled(it) }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,17 +97,16 @@ fun EditProfileContent(
     )
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Edit Profile", fontWeight = FontWeight.Bold) },
+                title = { Text("Edit Profile", fontWeight = FontWeight.Bold, color = Color.White) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+                }
             )
         }
     ) { innerPadding ->

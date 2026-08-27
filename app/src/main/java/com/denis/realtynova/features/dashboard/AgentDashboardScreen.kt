@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,6 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.tooling.preview.Preview
+import com.denis.realtynova.core.designsystem.components.CreativeBackground
+import com.denis.realtynova.core.designsystem.components.BackgroundVariant
+import com.denis.realtynova.R
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
 import com.denis.realtynova.core.designsystem.theme.ChampagneGold
 import com.denis.realtynova.core.designsystem.theme.RealtyNovaTextStyles
@@ -37,11 +41,17 @@ fun AgentDashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    AgentDashboardContent(
-        uiState = uiState,
-        onBack = onBack,
-        onManageListings = onManageListings
-    )
+    CreativeBackground(
+        imageRes = R.drawable.img_11,
+        variant = BackgroundVariant.DARK,
+        overlayAlpha = 0.9f
+    ) {
+        AgentDashboardContent(
+            uiState = uiState,
+            onBack = onBack,
+            onManageListings = onManageListings
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,12 +62,14 @@ fun AgentDashboardContent(
     onManageListings: () -> Unit
 ) {
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Agent Dashboard", fontWeight = FontWeight.Bold) },
+                title = { Text("Agent Dashboard", fontWeight = FontWeight.Bold, color = Color.White) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 }
             )
@@ -74,7 +86,8 @@ fun AgentDashboardContent(
                 Text(
                     text = "Welcome back, Agent",
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White
                 )
             }
 

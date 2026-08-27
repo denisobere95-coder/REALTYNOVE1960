@@ -25,16 +25,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.denis.realtynova.core.designsystem.components.RealtyNovaButton
-import com.denis.realtynova.core.designsystem.components.ButtonVariant
-import com.denis.realtynova.core.designsystem.theme.DeepEmerald
-import com.denis.realtynova.core.designsystem.theme.ChampagneGold
+import com.denis.realtynova.core.designsystem.components.*
+import com.denis.realtynova.core.designsystem.theme.*
 import com.denis.realtynova.core.domain.model.Property
+import com.denis.realtynova.R
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import androidx.compose.ui.tooling.preview.Preview
-import com.denis.realtynova.core.designsystem.theme.REALTYNOVATheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,170 +104,142 @@ fun BookingScreenContent(
         )
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Book a Viewing", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+    CreativeBackground(
+        imageRes = R.drawable.img_18,
+        variant = BackgroundVariant.EMERALD,
+        overlayAlpha = 0.85f
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("Book a Viewing", fontWeight = FontWeight.Bold, color = Color.White) },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        }
                     }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
                 )
-            )
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            // Property Header
-            uiState.property?.let { property ->
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            }
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                // Property Header
+                uiState.property?.let { property ->
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = Color.White.copy(alpha = 0.12f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+                    ) {
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.HomeWork, contentDescription = null, tint = ChampagneGold)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(text = property.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
+                                Text(text = property.location, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.7f))
+                            }
+                        }
+                    }
+                }
+
+                Text("Select Date", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
+
+                // Simple Date Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.HomeWork, contentDescription = null, tint = DeepEmerald)
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text(text = property.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            Text(text = property.location, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                }
-            }
+                    repeat(5) { dayOffset ->
+                        val date = LocalDate.now().plusDays(dayOffset.toLong() + 1)
+                        val isSelected = selectedDate == date
 
-            Text("Select Date", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-
-            // Simple Date Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                repeat(5) { dayOffset ->
-                    val date = LocalDate.now().plusDays(dayOffset.toLong() + 1)
-                    val isSelected = selectedDate == date
-
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { selectedDate = date },
-                        shape = RoundedCornerShape(16.dp),
-                        color = if (isSelected) DeepEmerald else MaterialTheme.colorScheme.surface,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) DeepEmerald else MaterialTheme.colorScheme.outlineVariant)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(vertical = 12.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { selectedDate = date },
+                            shape = RoundedCornerShape(16.dp),
+                            color = if (isSelected) DeepEmerald else Color.White.copy(alpha = 0.08f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) DeepEmerald else Color.White.copy(alpha = 0.1f))
                         ) {
-                            Text(
-                                text = date.dayOfWeek.name.take(3),
-                                fontSize = 10.sp,
-                                color = if (isSelected) Color.White.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = date.dayOfMonth.toString(),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
-                            )
+                            Column(
+                                modifier = Modifier.padding(vertical = 12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = date.dayOfWeek.name.take(3),
+                                    fontSize = 10.sp,
+                                    color = if (isSelected) Color.White.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.5f)
+                                )
+                                Text(
+                                    text = date.dayOfMonth.toString(),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = if (isSelected) Color.White else Color.White
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            Text("Select Preferred Time", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Select Preferred Time", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                items(timeSlots) { time ->
-                    val isSelected = selectedTime == time
-                    Surface(
-                        modifier = Modifier.clickable { selectedTime = time },
-                        shape = RoundedCornerShape(12.dp),
-                        color = if (isSelected) DeepEmerald.copy(alpha = 0.1f) else Color.Transparent,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) DeepEmerald else MaterialTheme.colorScheme.outlineVariant)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    items(timeSlots) { time ->
+                        val isSelected = selectedTime == time
+                        Surface(
+                            modifier = Modifier.clickable { selectedTime = time },
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isSelected) DeepEmerald.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.05f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) DeepEmerald else Color.White.copy(alpha = 0.1f))
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.AccessTime,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = if (isSelected) DeepEmerald else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = time,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) DeepEmerald else MaterialTheme.colorScheme.onSurface
-                            )
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AccessTime,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = if (isSelected) Color.White else Color.White.copy(alpha = 0.6f)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = time,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = Color.White
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            RealtyNovaButton(
-                onClick = {
-                    onConfirmBooking(propertyId, selectedDate, selectedTime!!)
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                enabled = selectedTime != null && !uiState.isProcessing,
-                variant = ButtonVariant.Premium
-            ) {
-                if (uiState.isProcessing) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
-                } else {
-                    Text("CONFIRM VIEWING", fontWeight = FontWeight.Bold)
+                RealtyNovaButton(
+                    onClick = {
+                        onConfirmBooking(propertyId, selectedDate, selectedTime!!)
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    enabled = selectedTime != null && !uiState.isProcessing,
+                    variant = ButtonVariant.Premium
+                ) {
+                    if (uiState.isProcessing) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
+                    } else {
+                        Text("CONFIRM VIEWING", fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
-    }
-}
-
-private val sampleProperty = Property(
-    id = "1",
-    title = "Luxury Villa in Runda",
-    location = "Runda, Nairobi",
-    price = 85000000.0,
-    bedrooms = 5,
-    bathrooms = 4.5,
-    areaSqFt = 4500.0,
-    description = "A beautiful luxury villa...",
-    address = "123 Runda Drive",
-    type = "House",
-    listingType = "Sale",
-    images = emptyList()
-)
-
-@Preview(showBackground = true)
-@Composable
-fun BookingScreenPreview() {
-    REALTYNOVATheme {
-        BookingScreenContent(
-            uiState = BookingUiState(
-                property = sampleProperty,
-                isLoading = false,
-                isProcessing = false,
-                bookingSuccess = false
-            ),
-            propertyId = "1",
-            onBack = {},
-            onBookingConfirmed = {},
-            onConfirmBooking = { _, _, _ -> }
-        )
     }
 }

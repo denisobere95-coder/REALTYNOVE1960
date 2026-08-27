@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.denis.realtynova.core.domain.model.Property
+import com.denis.realtynova.core.domain.model.SearchFilter
 import com.denis.realtynova.core.domain.repository.PropertyRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -48,7 +49,7 @@ class AiAssistantViewModel @Inject constructor(
             _messages.add(typingMessage)
             
             val query = text.lowercase()
-            val results = propertyRepository.searchProperties(query, null)
+            val results = propertyRepository.searchProperties(SearchFilter(query = query))
             
             // Use Gemini for response
             val aiResponse = geminiManager.generateResponse(text, results)

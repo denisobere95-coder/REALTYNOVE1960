@@ -17,7 +17,7 @@ class ShareManager @Inject constructor() {
             
             ${property.title}
             Location: ${property.location}
-            Price: ${property.currency} ${String.format("%,.0f", property.price)}
+            Price: ${property.currency} ${String.format(java.util.Locale.US, "%,.0f", property.price)}
             
             View more: $shareLink
         """.trimIndent()

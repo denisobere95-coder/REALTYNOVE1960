@@ -18,6 +18,7 @@ import javax.inject.Inject
 data class HomeUiState(
     val isLoading: Boolean = false,
     val properties: List<Property> = emptyList(),
+    val featuredProperty: Property? = null,
     val favoriteIds: Set<String> = emptySet(),
     val marketTrends: List<Float> = emptyList(),
     val error: String? = null
@@ -45,9 +46,13 @@ class HomeViewModel @Inject constructor(
             try {
                 val properties = propertyRepository.getProperties()
                 val trends = propertyRepository.getMarketTrends()
+                val featuredId = propertyRepository.getFeaturedPropertyId()
+                val featured = properties.find { it.id == featuredId } ?: properties.firstOrNull()
+                
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     properties = properties,
+                    featuredProperty = featured,
                     marketTrends = trends
                 )
             } catch (e: Exception) {

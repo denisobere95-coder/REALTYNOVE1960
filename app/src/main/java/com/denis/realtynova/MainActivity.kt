@@ -31,6 +31,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.activity.viewModels
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.denis.realtynova.core.data.manager.SessionManager
@@ -43,6 +44,8 @@ import com.denis.realtynova.core.designsystem.theme.REALTYNOVATheme
 import com.denis.realtynova.core.navigation.RealtyNovaNavHost
 import com.denis.realtynova.core.navigation.Route
 import com.denis.realtynova.core.util.BiometricManager
+import com.denis.realtynova.features.auth.AuthViewModel
+import com.denis.realtynova.core.domain.model.AuthState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -52,9 +55,17 @@ class MainActivity : FragmentActivity() {
 
     @Inject lateinit var sessionManager: SessionManager
     @Inject lateinit var biometricManager: BiometricManager
+    
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
+        
+        // Keep splash screen until auth state is determined
+        splashScreen.setKeepOnScreenCondition {
+            authViewModel.authState.value is AuthState.Initial
+        }
+        
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
@@ -110,7 +121,7 @@ class MainActivity : FragmentActivity() {
         val tabs = remember {
             listOf(
                 BottomTab(Route.Home, Icons.Default.Home, "Home"),
-                BottomTab(Route.Search, Icons.Default.Search, "Search"),
+                BottomTab(Route.Search(), Icons.Default.Search, "Search"),
                 BottomTab(Route.Map, Icons.Default.LocationOn, "Map"),
                 BottomTab(Route.Saved, Icons.Default.Favorite, "Saved"),
                 BottomTab(Route.Profile, Icons.Default.Person, "Profile"),

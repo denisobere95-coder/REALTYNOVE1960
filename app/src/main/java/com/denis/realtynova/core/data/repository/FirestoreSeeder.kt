@@ -1,6 +1,5 @@
 package com.denis.realtynova.core.data.repository
 
-import com.denis.realtynova.core.domain.model.Property
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject

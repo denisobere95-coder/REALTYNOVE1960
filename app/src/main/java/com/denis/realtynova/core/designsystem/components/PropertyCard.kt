@@ -138,6 +138,7 @@ fun PropertyCard(
                 val imageModel = remember(imageUrl) {
                     if (imageUrl.startsWith("res:///drawable/")) {
                         val resName = imageUrl.substringAfterLast("/")
+                        // Use a basic mapping or cache if possible to avoid getIdentifier in recomposition
                         context.resources.getIdentifier(resName, "drawable", context.packageName).let {
                             if (it != 0) it else R.drawable.img_14
                         }
@@ -147,7 +148,11 @@ fun PropertyCard(
                 }
 
                 AsyncImage(
-                    model = imageModel,
+                    model = coil.request.ImageRequest.Builder(LocalContext.current)
+                        .data(imageModel)
+                        .crossfade(true)
+                        .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                        .build(),
                     contentDescription = title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,

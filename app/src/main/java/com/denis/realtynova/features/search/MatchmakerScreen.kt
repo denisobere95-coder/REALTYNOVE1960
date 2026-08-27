@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.denis.realtynova.core.designsystem.components.CreativeBackground
+import com.denis.realtynova.core.designsystem.components.BackgroundVariant
 import com.denis.realtynova.R
 import com.denis.realtynova.core.domain.model.Property
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
@@ -52,64 +54,72 @@ fun MatchmakerScreen(
     
     var currentIndex by remember { mutableIntStateOf(0) }
     
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { 
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("AI Matchmaker", fontWeight = FontWeight.Bold)
-                        Text("SWIPE TO DISCOVER", style = MaterialTheme.typography.labelSmall, color = DeepEmerald)
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.Center
-        ) {
-            if (currentIndex < properties.size) {
-                val property = properties[currentIndex]
-                
-                MatchCard(
-                    property = property,
-                    onSwipeLeft = { currentIndex++ },
-                    onSwipeRight = { 
-                        viewModel.toggleFavorite(property.id)
-                        currentIndex++
+    CreativeBackground(
+        imageRes = R.drawable.img_23,
+        variant = BackgroundVariant.NAVY,
+        overlayAlpha = 0.9f
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { 
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("AI Matchmaker", fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("SWIPE TO DISCOVER", style = MaterialTheme.typography.labelSmall, color = ChampagneGold)
+                        }
                     },
-                    onInfoClick = { onPropertyClick(property.id) }
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        }
+                    }
                 )
-                
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 48.dp),
-                    horizontalArrangement = Arrangement.spacedBy(32.dp)
-                ) {
-                    MatchActionCircle(
-                        icon = Icons.Default.Close,
-                        color = Color(0xFFD64545),
-                        onClick = { currentIndex++ }
-                    )
-                    MatchActionCircle(
-                        icon = Icons.Default.Favorite,
-                        color = DeepEmerald,
-                        onClick = { 
+            }
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                if (currentIndex < properties.size) {
+                    val property = properties[currentIndex]
+                    
+                    MatchCard(
+                        property = property,
+                        onSwipeLeft = { currentIndex++ },
+                        onSwipeRight = { 
                             viewModel.toggleFavorite(property.id)
                             currentIndex++
-                        }
+                        },
+                        onInfoClick = { onPropertyClick(property.id) }
                     )
+                    
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 48.dp),
+                        horizontalArrangement = Arrangement.spacedBy(32.dp)
+                    ) {
+                        MatchActionCircle(
+                            icon = Icons.Default.Close,
+                            color = Color(0xFFD64545),
+                            onClick = { currentIndex++ }
+                        )
+                        MatchActionCircle(
+                            icon = Icons.Default.Favorite,
+                            color = DeepEmerald,
+                            onClick = { 
+                                viewModel.toggleFavorite(property.id)
+                                currentIndex++
+                            }
+                        )
+                    }
+                } else {
+                    MatchmakerEmptyState(onRefresh = { currentIndex = 0 })
                 }
-            } else {
-                MatchmakerEmptyState(onRefresh = { currentIndex = 0 })
             }
         }
     }
@@ -212,11 +222,11 @@ private fun MatchActionCircle(icon: ImageVector, color: Color, onClick: () -> Un
 @Composable
 private fun MatchmakerEmptyState(onRefresh: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(Icons.Default.Favorite, null, tint = Color.LightGray, modifier = Modifier.size(64.dp))
+        Icon(Icons.Default.Favorite, null, tint = Color.LightGray.copy(alpha = 0.5f), modifier = Modifier.size(64.dp))
         Spacer(modifier = Modifier.height(16.dp))
-        Text("No more matches for now.", color = Color.Gray)
+        Text("No more matches for now.", color = Color.White.copy(alpha = 0.7f))
         TextButton(onClick = onRefresh) {
-            Text("START OVER", color = DeepEmerald, fontWeight = FontWeight.Bold)
+            Text("START OVER", color = ChampagneGold, fontWeight = FontWeight.Bold)
         }
     }
 }

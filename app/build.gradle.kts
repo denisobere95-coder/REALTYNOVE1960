@@ -15,7 +15,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.denis.realtynova"
+        applicationId = "com.denis.realtynova.c3"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
@@ -27,6 +27,7 @@ android {
         val mapsApiKey: String = project.findProperty("maps.api.key") as? String ?: ""
         
         buildConfigField("String", "REALTYNOVA_API_KEY", "\"$apiKey\"")
+        buildConfigField("String", "FIREBASE_PROJECT_NAME", "\"REALTYNOVAC3\"")
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
@@ -73,16 +74,29 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.core.splashscreen)
     implementation("androidx.compose.material:material-icons-extended")
-    implementation(libs.firebase.ai)
+    
+    // Credentials
+    implementation(libs.androidx.credentials.auth)
+    implementation(libs.androidx.credentials.play)
+    implementation(libs.google.identity.googleid)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
+    implementation(libs.firebase.vertexai)
     implementation(libs.firebase.database)
+    implementation(libs.firebase.ai)
     implementation(libs.firebase.inappmessaging.display)
-    implementation(libs.google.firebase.auth)
-    implementation(libs.googleid)
+    implementation(libs.firebase.config)
+    implementation(libs.firebase.appcheck.playintegrity)
     
     // Glance
     implementation(libs.androidx.glance.appwidget)
@@ -132,19 +146,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
-    // Firebase
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics)
-    implementation(libs.firebase.crashlytics)
-    implementation(libs.firebase.messaging)
-    implementation(libs.firebase.auth)
-    implementation(libs.firebase.firestore)
-    implementation(libs.firebase.storage)
-    implementation(libs.firebase.vertexai)
-
     // Google Maps
     implementation(libs.maps.compose)
-    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation(libs.play.services.maps)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)

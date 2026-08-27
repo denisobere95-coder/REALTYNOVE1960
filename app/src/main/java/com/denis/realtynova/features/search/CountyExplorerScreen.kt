@@ -24,6 +24,8 @@ import coil.compose.AsyncImage
 import com.denis.realtynova.R
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
 import com.denis.realtynova.core.designsystem.theme.ChampagneGold
+import com.denis.realtynova.core.designsystem.components.CreativeBackground
+import com.denis.realtynova.core.designsystem.components.BackgroundVariant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,27 +35,35 @@ fun CountyExplorerScreen(
 ) {
     val counties = listOf("Nairobi", "Mombasa", "Kiambu", "Kisumu", "Nakuru", "Machakos")
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Kenya County Explorer", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+    CreativeBackground(
+        imageRes = R.drawable.img_51,
+        variant = BackgroundVariant.DARK,
+        overlayAlpha = 0.82f
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = { Text("Kenya County Explorer", fontWeight = FontWeight.Bold, color = Color.White) },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        }
                     }
+                )
+            }
+        ) { innerPadding ->
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentPadding = PaddingValues(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(counties) { county ->
+                    CountyCard(name = county, onClick = { onCountyClick(county) })
                 }
-            )
-        }
-    ) { innerPadding ->
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(counties) { county ->
-                CountyCard(name = county, onClick = { onCountyClick(county) })
             }
         }
     }

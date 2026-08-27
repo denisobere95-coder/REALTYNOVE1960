@@ -16,6 +16,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.denis.realtynova.core.designsystem.components.CreativeBackground
+import com.denis.realtynova.core.designsystem.components.BackgroundVariant
+import com.denis.realtynova.R
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
 import com.denis.realtynova.core.designsystem.theme.ChampagneGold
 
@@ -24,34 +27,42 @@ import com.denis.realtynova.core.designsystem.theme.ChampagneGold
 fun MarketInsightsScreen(
     onBack: () -> Unit
 ) {
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Market Insights", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+    CreativeBackground(
+        imageRes = R.drawable.img_52,
+        variant = BackgroundVariant.DARK,
+        overlayAlpha = 0.85f
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("Market Insights", fontWeight = FontWeight.Bold, color = Color.White) },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        }
                     }
+                )
+            }
+        ) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentPadding = PaddingValues(20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                item {
+                    MarketOverviewCard()
                 }
-            )
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            item {
-                MarketOverviewCard()
-            }
-            item {
-                PriceTrendCard()
-            }
-            item {
-                InvestmentHotspotCard(name = "Westlands", appreciation = "+12.4%")
-            }
-            item {
-                InvestmentHotspotCard(name = "Karen", appreciation = "+8.2%")
+                item {
+                    PriceTrendCard()
+                }
+                item {
+                    InvestmentHotspotCard(name = "Westlands", appreciation = "+12.4%")
+                }
+                item {
+                    InvestmentHotspotCard(name = "Karen", appreciation = "+8.2%")
+                }
             }
         }
     }

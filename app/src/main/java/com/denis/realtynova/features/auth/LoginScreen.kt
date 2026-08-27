@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -46,7 +47,6 @@ import com.denis.realtynova.R
 import com.denis.realtynova.core.designsystem.components.RealtyNovaButton
 import com.denis.realtynova.core.designsystem.components.RealtyNovaLogo
 import com.denis.realtynova.core.designsystem.components.RealtyNovaTextField
-import com.denis.realtynova.features.auth.components.SocialAuthSection
 import kotlinx.coroutines.delay
 
 @Composable
@@ -54,8 +54,6 @@ fun LoginScreen(
     onLoginSuccessAction: (String, String) -> Unit,
     onRegisterClickAction: () -> Unit,
     onForgotPasswordAction: (String) -> Unit = {},
-    onGoogleSignInAction: () -> Unit = {},
-    onPhoneAuthClickAction: () -> Unit = {},
     onBackClickAction: () -> Unit = {},
     isLoading: Boolean = false,
     errorMessage: String? = null,
@@ -292,12 +290,31 @@ fun LoginScreen(
                         )
 
                         if (!errorMessage.isNullOrBlank()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = errorMessage,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.labelSmall
-                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Surface(
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text = errorMessage,
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        lineHeight = 16.sp
+                                    )
+                                }
+                            }
                         }
 
                         if (!successMessage.isNullOrBlank()) {
@@ -350,56 +367,6 @@ fun LoginScreen(
                                 letterSpacing = 1.2.sp
                             )
                         }
-
-                        Spacer(
-                            modifier = Modifier.height(22.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(1.dp)
-                                    .background(
-                                        MaterialTheme.colorScheme.outlineVariant
-                                    )
-                            )
-
-                            Text(
-                                text = "  OR CONTINUE WITH  ",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(1.dp)
-                                    .background(
-                                        MaterialTheme.colorScheme.outlineVariant
-                                    )
-                            )
-                        }
-
-                        Spacer(
-                            modifier = Modifier.height(18.dp)
-                        )
-
-                        SocialAuthSection(
-                            onGoogleClick = {
-                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
-                                onGoogleSignInAction()
-                            },
-                            onFacebookClick = { },
-                            onInstagramClick = { },
-                            onPhoneClick = {
-                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
-                                onPhoneAuthClickAction()
-                            }
-                        )
 
                         Spacer(
                             modifier = Modifier.height(24.dp)

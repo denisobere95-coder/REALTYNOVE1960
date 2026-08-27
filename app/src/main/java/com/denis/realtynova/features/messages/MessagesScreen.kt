@@ -22,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.denis.realtynova.core.designsystem.components.CreativeBackground
+import com.denis.realtynova.core.designsystem.components.BackgroundVariant
+import com.denis.realtynova.R
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
 import com.denis.realtynova.core.designsystem.theme.ChampagneGold
 import com.denis.realtynova.core.designsystem.theme.Graphite
@@ -54,49 +57,57 @@ fun MessagesScreenContent(
     onChatClick: (String) -> Unit,
     onBack: () -> Unit
 ) {
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Messages", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+    CreativeBackground(
+        imageRes = R.drawable.img_4,
+        variant = BackgroundVariant.EMERALD,
+        overlayAlpha = 0.85f
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("Messages", fontWeight = FontWeight.Bold, color = Color.White) },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { }) {
+                            Icon(imageVector = Icons.Default.EditNote, contentDescription = "New Message", tint = Color.White)
+                        }
                     }
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(Icons.Default.EditNote, contentDescription = "New Message")
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
-        when (val state = uiState) {
-            is MessagesUiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = DeepEmerald)
-                }
+                )
             }
-            is MessagesUiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = state.message, color = MaterialTheme.colorScheme.error)
-                }
-            }
-            is MessagesUiState.Success -> {
-                if (state.chats.isEmpty()) {
+        ) { innerPadding ->
+            when (val state = uiState) {
+                is MessagesUiState.Loading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = "No messages yet", color = Color.Gray)
+                        CircularProgressIndicator(color = ChampagneGold)
                     }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(state.chats) { chat ->
-                            ChatListItem(chat = chat, onClick = { onChatClick(chat.otherUserId) })
+                }
+                is MessagesUiState.Error -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = state.message, color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                is MessagesUiState.Success -> {
+                    if (state.chats.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(text = "No messages yet", color = Color.White.copy(alpha = 0.6f))
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(state.chats) { chat ->
+                                ChatListItem(chat = chat, onClick = { onChatClick(chat.otherUserId) })
+                            }
                         }
                     }
                 }

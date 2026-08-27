@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.denis.realtynova.core.data.manager.SessionManager
+import com.denis.realtynova.core.domain.model.AuthState
 import com.denis.realtynova.core.domain.model.User
 import com.denis.realtynova.core.domain.model.UserRole
 import com.denis.realtynova.core.domain.repository.AuthRepository
@@ -33,13 +34,26 @@ class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val sessionManager: SessionManager,
     private val googleAuthManager: GoogleAuthManager,
-    private val firebaseAnalytics: FirebaseAnalytics
+    private val firebaseAnalytics: FirebaseAnalytics,
 ) : ViewModel() {
 
     private val firebaseAuth = FirebaseAuth.getInstance()
 
+    val authState: StateFlow<AuthState> = authRepository.authState
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AuthState.Initial)
+
     val currentUser: StateFlow<User?> = authRepository.currentUser
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    init {
+        viewModelScope.launch {
+            currentUser.collect { user ->
+                if (user != null) {
+                    authRepository.setOnlineStatus(isOnline = true)
+                }
+            }
+        }
+    }
 
     val userRole: StateFlow<UserRole> = sessionManager.userRole
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UserRole.BUYER)
@@ -78,9 +92,28 @@ class AuthViewModel @Inject constructor(
     }
 
     fun login(email: String, password: String) {
+        if (!authRepository.isFirebaseConfigured()) {
+            _uiState.value = AuthUiState.Error(
+                "Firebase is not properly configured. Check your google-services.json file."
+            )
+            return
+        }
+        
+        val cleanEmail = email.trim()
+        val cleanPassword = password.trim()
+
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(cleanEmail).matches()) {
+            _uiState.value = AuthUiState.Error("Please enter a valid email address.")
+            return
+        }
+        if (cleanPassword.length < 6) {
+            _uiState.value = AuthUiState.Error("Password must be at least 6 characters.")
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
-            val result = authRepository.loginWithEmail(email, password)
+            val result = authRepository.loginWithEmail(cleanEmail, cleanPassword)
             _uiState.value = result.fold(
                 onSuccess = { 
                     firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN) {
@@ -88,15 +121,46 @@ class AuthViewModel @Inject constructor(
                     }
                     AuthUiState.Success(it) 
                 },
-                onFailure = { AuthUiState.Error(it.message ?: "Authentication failed") }
+                onFailure = {
+                    val msg = it.message ?: "Authentication failed"
+                    if (msg.contains("API", ignoreCase = true)) {
+                        AuthUiState.Error("API Error: Identity Toolkit API might be disabled in Google Console.")
+                    } else {
+                        AuthUiState.Error(msg)
+                    }
+                },
             )
         }
     }
 
     fun signUp(name: String, email: String, password: String, phone: String, role: UserRole = UserRole.BUYER) {
+        if (!authRepository.isFirebaseConfigured()) {
+            _uiState.value = AuthUiState.Error("Firebase setup incomplete. Check project configuration.")
+            return
+        }
+
+        val cleanName = name.trim()
+        val cleanEmail = email.trim()
+        val cleanPassword = password.trim()
+
+        if (cleanName.isBlank()) {
+            _uiState.value = AuthUiState.Error("Please enter your full name.")
+            return
+        }
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(cleanEmail).matches()) {
+            _uiState.value = AuthUiState.Error("Please enter a valid email address.")
+            return
+        }
+        if (cleanPassword.length < 6) {
+            _uiState.value = AuthUiState.Error("Password must be at least 6 characters.")
+            return
+        }
+        
+        val normalizedPhone = normalizeKenyanPhoneNumber(phone) ?: phone
+        
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
-            val result = authRepository.signUpWithEmail(email, password, phone, name)
+            val result = authRepository.signUpWithEmail(cleanEmail, cleanPassword, normalizedPhone, cleanName)
             _uiState.value = result.fold(
                 onSuccess = { 
                     setUserRole(role)
@@ -105,7 +169,14 @@ class AuthViewModel @Inject constructor(
                     }
                     AuthUiState.Success(it) 
                 },
-                onFailure = { AuthUiState.Error(it.message ?: "Signup failed") }
+                onFailure = { 
+                    val msg = it.message ?: "Signup failed"
+                    if (msg.contains("API", ignoreCase = true)) {
+                        AuthUiState.Error("API Restriction: The provided API key does not support Firebase Auth.")
+                    } else {
+                        AuthUiState.Error(msg)
+                    }
+                },
             )
         }
     }
@@ -241,9 +312,21 @@ class AuthViewModel @Inject constructor(
         if (cleaned.isBlank()) return null
 
         return when {
-            cleaned.startsWith("+254") -> if (cleaned.length == 13 && cleaned.substring(4).all { it.isDigit() }) cleaned else null
-            cleaned.startsWith("254") -> if (cleaned.length == 12 && cleaned.substring(3).all { it.isDigit() }) "+$cleaned" else null
-            cleaned.startsWith("0") -> if (cleaned.length == 10 && cleaned.all { it.isDigit() }) "+254${cleaned.substring(1)}" else null
+            // Already full E.164
+            cleaned.startsWith("+254") -> if (cleaned.length == 13 && (cleaned.substring(4).all { it.isDigit() })) cleaned else null
+            
+            // Kenyan format starting with 254 (missing +)
+            cleaned.startsWith("254") -> if (cleaned.length == 12 && (cleaned.substring(3).all { it.isDigit() })) "+$cleaned" else null
+            
+            // Standard Kenyan format starting with 0
+            cleaned.startsWith("0") -> if (cleaned.length == 10 && (cleaned.all { it.isDigit() })) "+254${cleaned.substring(1)}" else null
+            
+            // 9-digit format (missing leading 0) - e.g. 712345678
+            cleaned.length == 9 && cleaned.all { it.isDigit() } -> "+254$cleaned"
+            
+            // 7-digit format (very unlikely for Kenyan mobiles but possible for some landlines)
+            cleaned.length == 7 && cleaned.all { it.isDigit() } -> "+254$cleaned"
+            
             else -> null
         }
     }
@@ -270,8 +353,8 @@ class AuthViewModel @Inject constructor(
             _uiState.value = AuthUiState.Loading
             val result = authRepository.resetPassword(email)
             _uiState.value = result.fold(
-                onSuccess = { AuthUiState.SuccessMessage("Password reset email sent to $email") },
-                onFailure = { AuthUiState.Error(it.message ?: "Failed to send reset email") }
+                onSuccess = { AuthUiState.SuccessMessage("Reset instructions sent to $email") },
+                onFailure = { AuthUiState.Error(it.message ?: "Failed to send instructions") }
             )
         }
     }

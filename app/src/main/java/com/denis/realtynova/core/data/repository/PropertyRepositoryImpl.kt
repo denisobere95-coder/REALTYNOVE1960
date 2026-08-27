@@ -4,43 +4,63 @@ import com.denis.realtynova.core.data.local.PropertyDao
 import com.denis.realtynova.core.data.local.PropertyEntity
 import com.denis.realtynova.core.domain.model.*
 import com.denis.realtynova.core.domain.repository.PropertyRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import kotlinx.coroutines.flow.first
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import timber.log.Timber
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 
 @Singleton
 class PropertyRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val propertyDao: PropertyDao
+    private val firebaseAuth: FirebaseAuth,
+    private val storage: FirebaseStorage,
+    private val remoteConfig: FirebaseRemoteConfig,
+    private val propertyDao: PropertyDao,
 ) : PropertyRepository {
 
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val propertiesCollection = firestore.collection("properties")
 
-    override suspend fun getProperties(): List<Property> {
-        // Try fetching from network and cache
-        try {
-            val firestoreProperties = propertiesCollection
-                .orderBy("createdAt", Query.Direction.DESCENDING)
-                .get()
-                .await()
-                .toObjects(PropertyDto::class.java)
-            
-            if (firestoreProperties.isNotEmpty()) {
-                val entities = firestoreProperties.map { it.toEntity() }
-                propertyDao.clearAll()
-                propertyDao.insertProperties(entities)
+    override suspend fun getProperties(limit: Int, lastVisibleId: String?): List<Property> = withContext(Dispatchers.IO) {
+        // Return from local cache immediately if available
+        val cached = propertyDao.getAllProperties().firstOrNull() ?: emptyList()
+        
+        // Fetch from network in background to update cache
+        repositoryScope.launch {
+            try {
+                var query: Query = propertiesCollection
+                    .orderBy("createdAt", Query.Direction.DESCENDING)
+                    .limit(limit.toLong())
+                
+                if (lastVisibleId != null) {
+                    val lastDoc = propertiesCollection.document(lastVisibleId).get().await()
+                    query = query.startAfter(lastDoc)
+                }
+
+                val firestoreProperties = query.get().await().toObjects(PropertyDto::class.java)
+                
+                if (firestoreProperties.isNotEmpty()) {
+                    val entities = firestoreProperties.map { it.toEntity() }
+                    if (lastVisibleId == null) propertyDao.clearAll() // Only clear on first page
+                    propertyDao.insertProperties(entities)
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Firestore fetch failed")
             }
-        } catch (e: Exception) {
-            Timber.e(e, "Firestore fetch failed, falling back to local cache")
         }
 
-        // Return from local cache
-        val cached = propertyDao.getAllProperties().first()
-        return if (cached.isNotEmpty()) {
+        if (cached.isNotEmpty()) {
             cached.map { it.toDomain() }
         } else {
             getMockProperties()
@@ -59,11 +79,13 @@ class PropertyRepositoryImpl @Inject constructor(
                 bedrooms = 4,
                 bathrooms = 4.5,
                 areaSqFt = 4200.0,
-                images = listOf(PropertyImage("res:///drawable/img_45", PropertyImageType.HERO)),
+                images = listOf(PropertyImage("https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80", PropertyImageType.HERO)),
                 type = "Apartment",
                 listingType = "Buy",
                 isPremium = true,
                 isVerified = true,
+                latitude = -1.2633,
+                longitude = 36.8016,
                 yieldPercentage = 8.5,
                 trustScore = TrustScore(98, isOwnerVerified = true, isLocationVerified = true, isImagesVerified = true, isAgentVerified = true, isDocumentsChecked = true)
             ),
@@ -77,79 +99,67 @@ class PropertyRepositoryImpl @Inject constructor(
                 bedrooms = 5,
                 bathrooms = 5.0,
                 areaSqFt = 6500.0,
-                images = listOf(PropertyImage("res:///drawable/img_53", PropertyImageType.HERO)),
+                images = listOf(PropertyImage("https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=800&q=80", PropertyImageType.HERO)),
                 type = "Villa",
                 listingType = "Buy",
                 isPremium = true,
                 isVerified = true,
+                latitude = -1.3328,
+                longitude = 36.7029,
                 yieldPercentage = 7.2,
                 trustScore = TrustScore(95, isOwnerVerified = true, isLocationVerified = true, isImagesVerified = true, isAgentVerified = true, isDocumentsChecked = true)
-            ),
-            Property(
-                id = "mock_3",
-                title = "Ocean Breeze Estate",
-                description = "Modern coastal living with direct beach access and premium amenities.",
-                price = 45000000.0,
-                location = "Nyali, Mombasa",
-                address = "Links Road",
-                bedrooms = 3,
-                bathrooms = 3.0,
-                areaSqFt = 2800.0,
-                images = listOf(PropertyImage("res:///drawable/img_33", PropertyImageType.HERO)),
-                type = "Apartment",
-                listingType = "Buy",
-                isPremium = false,
-                isVerified = true,
-                yieldPercentage = 9.1,
-                trustScore = TrustScore(92, isOwnerVerified = true, isLocationVerified = true, isImagesVerified = true, isAgentVerified = true)
-            ),
-            Property(
-                id = "mock_4",
-                title = "Lavington Heights",
-                description = "Contemporary living in a secure gated community with close proximity to elite schools.",
-                price = 350000.0,
-                location = "Lavington, Nairobi",
-                address = "James Gichuru Road",
-                bedrooms = 3,
-                bathrooms = 3.0,
-                areaSqFt = 2200.0,
-                images = listOf(PropertyImage("res:///drawable/img_42", PropertyImageType.HERO)),
-                type = "Apartment",
-                listingType = "Rent",
-                isPremium = false,
-                isVerified = true,
-                trustScore = TrustScore(88, isOwnerVerified = true, isLocationVerified = true, isImagesVerified = true)
-            ),
-            Property(
-                id = "mock_5",
-                title = "Muthaiga Heritage Estate",
-                description = "Classic elegance meets modern luxury in this historic Muthaiga residence.",
-                price = 150000000.0,
-                location = "Muthaiga, Nairobi",
-                address = "Muthaiga Road",
-                bedrooms = 6,
-                bathrooms = 6.5,
-                areaSqFt = 8000.0,
-                images = listOf(PropertyImage("res:///drawable/img_51", PropertyImageType.HERO)),
-                type = "Villa",
-                listingType = "Buy",
-                isPremium = true,
-                isVerified = true,
-                yieldPercentage = 6.8,
-                trustScore = TrustScore(99, isOwnerVerified = true, isLocationVerified = true, isImagesVerified = true, isAgentVerified = true, isDocumentsChecked = true)
             )
         )
     }
 
-    override suspend fun searchProperties(query: String, maxPrice: Double?): List<Property> {
-        val allProperties = getProperties()
-        return if (query.isBlank() && maxPrice == null) {
-            allProperties
-        } else {
-            allProperties.filter {
-                (query.isBlank() || it.title.contains(query, ignoreCase = true) || it.location.contains(query, ignoreCase = true)) &&
-                (maxPrice == null || it.price <= maxPrice)
+    override suspend fun searchProperties(filter: SearchFilter, limit: Int): List<Property> = withContext(Dispatchers.IO) {
+        try {
+            var query: Query = propertiesCollection.limit(limit.toLong())
+            
+            // Apply server-side filters for performance
+            filter.propertyType?.let { if (it != "All") query = query.whereEqualTo("type", it) }
+            filter.listingType?.let { if (it != "All") query = query.whereEqualTo("listingType", it) }
+            filter.bedrooms?.let { query = query.whereGreaterThanOrEqualTo("bedrooms", it) }
+            
+            if (filter.isVerified) {
+                query = query.whereEqualTo("isVerified", true)
             }
+
+            val snapshot = query.get().await()
+            val remoteResults = snapshot.toObjects(PropertyDto::class.java).map { it.toDomain() }
+
+            // Apply fine-grained local filtering
+            var results = remoteResults.filter { property ->
+                val matchesQuery = filter.query.isBlank() || 
+                    property.title.contains(filter.query, ignoreCase = true) || 
+                    property.location.contains(filter.query, ignoreCase = true)
+                
+                val matchesPrice = (filter.minPrice == null || property.price >= filter.minPrice) &&
+                    (filter.maxPrice == null || property.price <= filter.maxPrice)
+                
+                val matchesAmenities = filter.amenities.isEmpty() || 
+                    property.amenities.containsAll(filter.amenities)
+                
+                val matchesArea = filter.minArea == null || property.areaSqFt >= filter.minArea
+                
+                matchesQuery && matchesPrice && matchesAmenities && matchesArea
+            }
+
+            // Apply Sorting
+            results = when (filter.sortBy) {
+                SortOrder.PRICE_LOW_HIGH -> results.sortedBy { it.price }
+                SortOrder.PRICE_HIGH_LOW -> results.sortedByDescending { it.price }
+                SortOrder.NEWEST -> results // Remote query should handle this via createdAt if indexed
+                SortOrder.RELEVANCE -> results
+            }
+
+            results
+        } catch (e: Exception) {
+            Timber.e(e, "Firestore search failed, falling back to cache")
+            val cached = propertyDao.getAllProperties().firstOrNull() ?: emptyList()
+            cached.asSequence().map { it.toDomain() }
+                .filter { it.title.contains(filter.query, ignoreCase = true) }
+                .toList()
         }
     }
 
@@ -180,16 +190,14 @@ class PropertyRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getMarketTrends(): List<Float> {
-        // In a real app, this could be fetched from a dedicated collection
         return listOf(0.2f, 0.4f, 0.35f, 0.6f, 0.55f, 0.8f, 0.75f, 0.9f)
     }
 
-    override suspend fun setSearchAlert(query: String, minPrice: Double?, maxPrice: Double?): Boolean {
+    override suspend fun setSearchAlert(filter: SearchFilter): Boolean {
         return try {
             val alert = hashMapOf(
-                "query" to query,
-                "minPrice" to minPrice,
-                "maxPrice" to maxPrice,
+                "filter" to filter,
+                "userId" to (firebaseAuth.currentUser?.uid ?: ""),
                 "createdAt" to System.currentTimeMillis()
             )
             firestore.collection("searchAlerts").add(alert).await()
@@ -197,6 +205,22 @@ class PropertyRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Error setting search alert")
             false
+        }
+    }
+
+    override suspend fun reportProperty(propertyId: String, reason: String, description: String): Result<Unit> {
+        return try {
+            val report = hashMapOf(
+                "propertyId" to propertyId,
+                "reason" to reason,
+                "description" to description,
+                "reportedBy" to (firebaseAuth.currentUser?.uid ?: "anonymous"),
+                "timestamp" to System.currentTimeMillis()
+            )
+            firestore.collection("reports").add(report).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
@@ -239,16 +263,23 @@ class PropertyRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getPendingListings(): List<Property> {
-        return emptyList()
+    override suspend fun getPendingListings(): List<Property> = emptyList()
+
+    override suspend fun updateListingStatus(id: String, status: String): Boolean = true
+
+    override suspend fun uploadFile(bucket: String, path: String, bytes: ByteArray): String = withContext(Dispatchers.IO) {
+        try {
+            val ref = storage.getReference(bucket).child(path)
+            ref.putBytes(bytes).await()
+            ref.downloadUrl.await().toString()
+        } catch (e: Exception) {
+            Timber.e(e, "Storage upload failed")
+            ""
+        }
     }
 
-    override suspend fun updateListingStatus(id: String, status: String): Boolean {
-        return true
-    }
-
-    override suspend fun uploadFile(bucket: String, path: String, bytes: ByteArray): String {
-        return "https://example.com/file.pdf"
+    override fun getFeaturedPropertyId(): String {
+        return remoteConfig.getString("featured_property_id")
     }
 }
 

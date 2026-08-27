@@ -25,6 +25,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.denis.realtynova.core.designsystem.components.CreativeBackground
+import com.denis.realtynova.core.designsystem.components.BackgroundVariant
+import com.denis.realtynova.R
 import com.denis.realtynova.core.designsystem.components.PropertyCard
 import com.denis.realtynova.core.designsystem.theme.*
 import com.denis.realtynova.core.domain.model.Property
@@ -75,64 +78,69 @@ fun SavedScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+    CreativeBackground(
+        imageRes = R.drawable.img_43,
+        variant = BackgroundVariant.EMERALD,
+        overlayAlpha = 0.85f
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 110.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
         ) {
-            item {
-                SavedHeader(
-                    savedCount = savedProperties.size,
-                    onSearch = onSearch,
-                    onNotifications = onNotifications
-                )
-            }
-
-            item {
-                SavedCategoryBar(
-                    selectedCategory = selectedCategory,
-                    onCategorySelected = { selectedCategory = it }
-                )
-            }
-
-            if (savedProperties.size >= 2) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 110.dp)
+            ) {
                 item {
-                    ComparePromotionCard(
-                        p1 = savedProperties[0],
-                        p2 = savedProperties[1],
-                        onClick = { onCompareClick(savedProperties[0].id, savedProperties[1].id) }
-                    )
-                }
-            }
-
-            if (savedProperties.isNotEmpty()) {
-                item {
-                    SmartSavedInsight(propertyCount = savedProperties.size)
-                }
-            }
-
-            if (filteredProperties.isEmpty()) {
-                item {
-                    EmptySavedState(onExplore = onExploreProperties)
-                }
-            } else {
-                item {
-                    SavedSectionHeader(
-                        title = if (selectedCategory == SavedCategory.ALL) "Your Collection" else selectedCategory.label,
-                        count = filteredProperties.size
+                    SavedHeader(
+                        savedCount = savedProperties.size,
+                        onSearch = onSearch,
+                        onNotifications = onNotifications
                     )
                 }
 
-                items(items = filteredProperties, key = { it.id }) { property ->
-                    SavedPropertyItem(
-                        property = property,
-                        onClick = { onPropertyClick(property.id) },
-                        onRemove = { viewModel.removeSaved(property.id) }
+                item {
+                    SavedCategoryBar(
+                        selectedCategory = selectedCategory,
+                        onCategorySelected = { selectedCategory = it }
                     )
+                }
+
+                if (savedProperties.size >= 2) {
+                    item {
+                        ComparePromotionCard(
+                            p1 = savedProperties[0],
+                            p2 = savedProperties[1],
+                            onClick = { onCompareClick(savedProperties[0].id, savedProperties[1].id) }
+                        )
+                    }
+                }
+
+                if (savedProperties.isNotEmpty()) {
+                    item {
+                        SmartSavedInsight(propertyCount = savedProperties.size)
+                    }
+                }
+
+                if (filteredProperties.isEmpty()) {
+                    item {
+                        EmptySavedState(onExplore = onExploreProperties)
+                    }
+                } else {
+                    item {
+                        SavedSectionHeader(
+                            title = if (selectedCategory == SavedCategory.ALL) "Your Collection" else selectedCategory.label,
+                            count = filteredProperties.size
+                        )
+                    }
+
+                    items(items = filteredProperties, key = { it.id }) { property ->
+                        SavedPropertyItem(
+                            property = property,
+                            onClick = { onPropertyClick(property.id) },
+                            onRemove = { viewModel.removeSaved(property.id) }
+                        )
+                    }
                 }
             }
         }
@@ -172,24 +180,25 @@ private fun SavedSectionHeader(title: String, count: Int) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+            Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = Color.White)
             Text(
                 text = "$count saved ${if (count == 1) "property" else "properties"}",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.White.copy(alpha = 0.7f)
             )
         }
         Surface(
             modifier = Modifier.size(42.dp),
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceVariant
+            color = Color.White.copy(alpha = 0.1f),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Default.Tune,
                     contentDescription = "Sort",
                     modifier = Modifier.size(19.dp),
-                    tint = DeepEmerald
+                    tint = Color.White
                 )
             }
         }
@@ -204,8 +213,8 @@ private fun SavedHeader(savedCount: Int, onSearch: () -> Unit, onNotifications: 
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        DeepEmerald.copy(alpha = 0.1f),
-                        MaterialTheme.colorScheme.background
+                        DeepEmerald.copy(alpha = 0.4f),
+                        Color.Transparent
                     )
                 )
             )
@@ -215,12 +224,12 @@ private fun SavedHeader(savedCount: Int, onSearch: () -> Unit, onNotifications: 
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Saved", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
+                        Text(text = "Saved", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold, color = Color.White)
                         Spacer(modifier = Modifier.width(12.dp))
-                        Surface(shape = RoundedCornerShape(50.dp), color = DeepEmerald) {
+                        Surface(shape = RoundedCornerShape(50.dp), color = ChampagneGold) {
                             Text(
                                 text = savedCount.toString(),
-                                color = Color.White,
+                                color = Color.Black,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
@@ -231,7 +240,7 @@ private fun SavedHeader(savedCount: Int, onSearch: () -> Unit, onNotifications: 
                     Text(
                         text = "Your private portfolio of elite properties.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color.White.copy(alpha = 0.8f)
                     )
                 }
                 HeaderIconButton(icon = Icons.Default.Search, onClick = onSearch)
@@ -389,19 +398,19 @@ private fun EmptySavedState(onExplore: () -> Unit) {
         Surface(
             modifier = Modifier.size(120.dp),
             shape = CircleShape,
-            color = DeepEmerald.copy(alpha = 0.05f)
+            color = Color.White.copy(alpha = 0.05f)
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(imageVector = Icons.Default.Favorite, contentDescription = null, tint = DeepEmerald.copy(alpha = 0.2f), modifier = Modifier.size(56.dp))
+                Icon(imageVector = Icons.Default.Favorite, contentDescription = null, tint = Color.White.copy(alpha = 0.2f), modifier = Modifier.size(56.dp))
             }
         }
         Spacer(modifier = Modifier.height(32.dp))
-        Text(text = "Portfolio Empty", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+        Text(text = "Portfolio Empty", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = Color.White)
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = "Save the properties you are interested in and they will appear here in your private collection.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = Color.White.copy(alpha = 0.7f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             lineHeight = 22.sp
         )

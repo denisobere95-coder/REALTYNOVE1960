@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +19,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -65,15 +67,12 @@ import com.denis.realtynova.core.designsystem.components.ButtonVariant
 import com.denis.realtynova.core.designsystem.components.RealtyNovaButton
 import com.denis.realtynova.core.designsystem.components.RealtyNovaLogo
 import com.denis.realtynova.core.designsystem.components.RealtyNovaTextField
-import com.denis.realtynova.features.auth.components.SocialAuthSection
 import kotlinx.coroutines.delay
 
 @Composable
 fun RegisterScreen(
     onRegisterSuccessAction: (String, String, String, String, String) -> Unit,
     onLoginClickAction: () -> Unit,
-    onGoogleSignInAction: () -> Unit = {},
-    onPhoneAuthClickAction: () -> Unit,
     onBackClickAction: () -> Unit,
     isLoading: Boolean = false,
     errorMessage: String? = null
@@ -435,12 +434,31 @@ fun RegisterScreen(
                         }
 
                         if (!errorMessage.isNullOrBlank()) {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = errorMessage,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.labelSmall
-                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Surface(
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                shape = RoundedCornerShape(14.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text = errorMessage,
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        lineHeight = 18.sp
+                                    )
+                                }
+                            }
                         }
 
                         Spacer(
@@ -463,51 +481,6 @@ fun RegisterScreen(
                         }
 
                         Spacer(
-                            modifier = Modifier.height(20.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(1.dp)
-                                    .background(
-                                        MaterialTheme.colorScheme.outlineVariant
-                                    )
-                            )
-
-                            Text(
-                                text = "  OR SIGN UP WITH  ",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(1.dp)
-                                    .background(
-                                        MaterialTheme.colorScheme.outlineVariant
-                                    )
-                            )
-                        }
-
-                        Spacer(
-                            modifier = Modifier.height(18.dp)
-                        )
-
-                        SocialAuthSection(
-                            onGoogleClick = onGoogleSignInAction,
-                            onFacebookClick = { },
-                            onInstagramClick = { },
-                            onPhoneClick = onPhoneAuthClickAction
-                        )
-
-                        Spacer(
                             modifier = Modifier.height(24.dp)
                         )
 
@@ -527,23 +500,8 @@ fun RegisterScreen(
                                 text = "Sign in",
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-
-                        Spacer(
-                            modifier = Modifier.height(12.dp)
-                        )
-
-                        RealtyNovaButton(
-                            onClick = onLoginClickAction,
-                            variant = ButtonVariant.Secondary,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "SIGN IN",
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.clickable { onLoginClickAction() }
                             )
                         }
                     }

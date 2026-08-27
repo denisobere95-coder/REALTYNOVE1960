@@ -38,7 +38,7 @@ sealed interface Route {
     data object Home : Route
 
     @Serializable
-    data object Search : Route
+    data class Search(val category: String? = null, val location: String? = null) : Route
 
     @Serializable
     data object Map : Route

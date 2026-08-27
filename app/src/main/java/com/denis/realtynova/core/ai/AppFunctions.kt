@@ -3,6 +3,7 @@ package com.denis.realtynova.core.ai
 import androidx.appfunctions.AppFunctionContext
 import androidx.appfunctions.AppFunctionSerializable
 import androidx.appfunctions.service.AppFunction
+import com.denis.realtynova.core.domain.model.SearchFilter
 import com.denis.realtynova.core.domain.repository.PropertyRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -71,11 +72,11 @@ class RealtyNovaFunctions @Inject constructor(
         query: String,
         maxPrice: Double? = null
     ): List<PropertyResult> = withContext(Dispatchers.IO) {
-        propertyRepository.searchProperties(query, maxPrice).map {
+        propertyRepository.searchProperties(SearchFilter(query = query, maxPrice = maxPrice)).map {
             PropertyResult(
                 id = it.id,
                 title = it.title,
-                price = "$${String.format("%,.0f", it.price)}",
+                price = "$${String.format(java.util.Locale.US, "%,.0f", it.price)}",
                 location = it.location,
                 type = it.type
             )
@@ -100,7 +101,7 @@ class RealtyNovaFunctions @Inject constructor(
                 id = it.id,
                 title = it.title,
                 description = it.description,
-                price = "$${String.format("%,.0f", it.price)}",
+                price = "$${String.format(java.util.Locale.US, "%,.0f", it.price)}",
                 address = it.address,
                 bedrooms = it.bedrooms,
                 bathrooms = it.bathrooms,
@@ -163,6 +164,6 @@ class RealtyNovaFunctions @Inject constructor(
         minPrice: Double? = null,
         maxPrice: Double? = null
     ): Boolean = withContext(Dispatchers.IO) {
-        propertyRepository.setSearchAlert(query, minPrice, maxPrice)
+        propertyRepository.setSearchAlert(SearchFilter(query = query, minPrice = minPrice, maxPrice = maxPrice))
     }
 }

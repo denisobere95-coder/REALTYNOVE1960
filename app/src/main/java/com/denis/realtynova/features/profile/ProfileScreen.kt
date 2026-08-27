@@ -30,8 +30,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.denis.realtynova.core.designsystem.theme.ChampagneGold
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
+import com.denis.realtynova.core.designsystem.theme.Graphite
+import com.denis.realtynova.core.designsystem.theme.SlateGray
+import com.denis.realtynova.core.designsystem.theme.StoneGray
 import com.denis.realtynova.core.domain.model.UserRole
 import com.denis.realtynova.features.auth.AuthViewModel
+import com.denis.realtynova.core.designsystem.components.CreativeBackground
+import com.denis.realtynova.core.designsystem.components.BackgroundVariant
+import com.denis.realtynova.R
 
 @Composable
 fun ProfileScreen(
@@ -41,6 +47,7 @@ fun ProfileScreen(
     onNavigateToAgentDashboard: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToMortgageCalculator: () -> Unit = {},
+    onNavigateToAiAssistant: () -> Unit = {},
     onLogout: () -> Unit = {},
     viewModel: AuthViewModel = hiltViewModel()
 ) {
@@ -49,139 +56,145 @@ fun ProfileScreen(
 
     val scrollState = rememberScrollState()
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = {
-            Spacer(modifier = Modifier.height(100.dp))
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(scrollState)
-                .padding(bottom = 120.dp)
-        ) {
-            ProfileHero(
-                name = user?.displayName ?: "Elite Member",
-                email = user?.email ?: "member@realtynova.com",
-                photoUrl = user?.photoUrl,
-                role = role,
-                onEditClick = onNavigateToEditProfile
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            ProfileSection(title = "MANAGEMENT") {
-                ProfileMenuItem(
-                    icon = Icons.Default.PersonOutline,
-                    title = "Personal Information",
-                    onClick = onNavigateToEditProfile
-                )
-                ProfileMenuItem(
-                    icon = Icons.Default.ChatBubbleOutline,
-                    title = "Messages",
-                    onClick = onNavigateToMessages
-                )
-                ProfileMenuItem(
-                    icon = Icons.Default.VerifiedUser,
-                    title = "Identity Verification",
-                    subtitle = "Get your blue badge",
-                    onClick = {}
-                )
-                ProfileMenuItem(
-                    icon = Icons.Default.Calculate,
-                    title = "Mortgage Calculator",
-                    onClick = onNavigateToMortgageCalculator
-                )
-                
-                if (role == UserRole.ADMIN) {
-                    ProfileMenuItem(
-                        icon = Icons.Default.AdminPanelSettings,
-                        title = "Admin Dashboard",
-                        onClick = onNavigateToAdminDashboard
-                    )
-                }
-                
-                if (role == UserRole.AGENT || role == UserRole.ADMIN) {
-                    ProfileMenuItem(
-                        icon = Icons.Default.Dashboard,
-                        title = "Agent Dashboard",
-                        onClick = onNavigateToAgentDashboard
-                    )
-                }
-
-                ProfileMenuItem(
-                    icon = Icons.Default.PrivacyTip,
-                    title = "Security & Privacy",
-                    onClick = onNavigateToEditProfile
-                )
+    CreativeBackground(
+        imageRes = R.drawable.img_18,
+        variant = BackgroundVariant.EMERALD,
+        overlayAlpha = 0.82f
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            bottomBar = {
+                Spacer(modifier = Modifier.height(100.dp))
             }
-
-            ProfileSection(title = "PREFERENCES") {
-                ProfileMenuItem(
-                    icon = Icons.Default.NotificationsNone,
-                    title = "Notification Settings",
-                    onClick = onNavigateToNotifications
-                )
-                ProfileMenuItem(
-                    icon = Icons.Default.Language,
-                    title = "Language",
-                    subtitle = "English (US)",
-                    onClick = {}
-                )
-            }
-
-            ProfileSection(title = "SUPPORT") {
-                ProfileMenuItem(
-                    icon = Icons.Default.HeadsetMic,
-                    title = "Live AI Concierge",
-                    subtitle = "Always active",
-                    onClick = {}
-                )
-                ProfileMenuItem(
-                    icon = Icons.Default.HelpOutline,
-                    title = "Help Center",
-                    onClick = {}
-                )
-                ProfileMenuItem(
-                    icon = Icons.Default.Info,
-                    title = "About REALTYNOVA",
-                    onClick = {}
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Surface(
+        ) { innerPadding ->
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .clickable(onClick = {
-                        viewModel.logout()
-                        onLogout()
-                    }),
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.2f))
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(scrollState)
+                    .padding(bottom = 120.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                ProfileHero(
+                    name = user?.displayName ?: "Elite Member",
+                    email = user?.email ?: "member@realtynova.com",
+                    photoUrl = user?.photoUrl,
+                    role = role,
+                    onEditClick = onNavigateToEditProfile
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                ProfileSection(title = "MANAGEMENT") {
+                    ProfileMenuItem(
+                        icon = Icons.Default.PersonOutline,
+                        title = "Personal Information",
+                        onClick = onNavigateToEditProfile
+                    )
+                    ProfileMenuItem(
+                        icon = Icons.Default.ChatBubbleOutline,
+                        title = "Messages",
+                        onClick = onNavigateToMessages
+                    )
+                    ProfileMenuItem(
+                        icon = Icons.Default.VerifiedUser,
+                        title = "Identity Verification",
+                        subtitle = "Get your blue badge",
+                        onClick = {}
+                    )
+                    ProfileMenuItem(
+                        icon = Icons.Default.Calculate,
+                        title = "Mortgage Calculator",
+                        onClick = onNavigateToMortgageCalculator
+                    )
+                    
+                    if (role == UserRole.ADMIN) {
+                        ProfileMenuItem(
+                            icon = Icons.Default.AdminPanelSettings,
+                            title = "Admin Dashboard",
+                            onClick = onNavigateToAdminDashboard
+                        )
+                    }
+                    
+                    if (role == UserRole.AGENT || role == UserRole.ADMIN) {
+                        ProfileMenuItem(
+                            icon = Icons.Default.Dashboard,
+                            title = "Agent Dashboard",
+                            onClick = onNavigateToAgentDashboard
+                        )
+                    }
+
+                    ProfileMenuItem(
+                        icon = Icons.Default.PrivacyTip,
+                        title = "Security & Privacy",
+                        onClick = onNavigateToEditProfile
+                    )
+                }
+
+                ProfileSection(title = "PREFERENCES") {
+                    ProfileMenuItem(
+                        icon = Icons.Default.NotificationsNone,
+                        title = "Notification Settings",
+                        onClick = onNavigateToNotifications
+                    )
+                    ProfileMenuItem(
+                        icon = Icons.Default.Language,
+                        title = "Language",
+                        subtitle = "English (US)",
+                        onClick = {}
+                    )
+                }
+
+                ProfileSection(title = "SUPPORT") {
+                    ProfileMenuItem(
+                        icon = Icons.Default.HeadsetMic,
+                        title = "Live AI Concierge",
+                        subtitle = "Always active",
+                        onClick = onNavigateToAiAssistant
+                    )
+                    ProfileMenuItem(
+                        icon = Icons.Default.HelpOutline,
+                        title = "Help Center",
+                        onClick = {}
+                    )
+                    ProfileMenuItem(
+                        icon = Icons.Default.Info,
+                        title = "About REALTYNOVA",
+                        onClick = {}
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .clickable(onClick = {
+                            viewModel.logout()
+                            onLogout()
+                        }),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.2f))
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "LOGOUT",
-                        color = MaterialTheme.colorScheme.error,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.2.sp
-                    )
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "LOGOUT",
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.2.sp
+                        )
+                    }
                 }
             }
         }
@@ -206,7 +219,7 @@ private fun ProfileHero(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(DeepEmerald, MaterialTheme.colorScheme.background)
+                        colors = listOf(DeepEmerald.copy(alpha = 0.8f), Color.Transparent)
                     )
                 )
         )
@@ -268,13 +281,13 @@ private fun ProfileHero(
                 text = name,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.ExtraBold,
-                color = if (photoUrl == null) MaterialTheme.colorScheme.onBackground else Color.White
+                color = Color.White
             )
             
             Text(
                 text = email,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (photoUrl == null) MaterialTheme.colorScheme.onSurfaceVariant else Color.White.copy(alpha = 0.7f)
+                color = Color.White.copy(alpha = 0.7f)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -303,16 +316,16 @@ private fun ProfileSection(title: String, content: @Composable ColumnScope.() ->
         Text(
             text = title,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = Color.White.copy(alpha = 0.6f),
             letterSpacing = 1.2.sp,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(12.dp))
         Surface(
             shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.surface,
+            color = Color.White.copy(alpha = 0.95f),
             tonalElevation = 2.dp,
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 content()
@@ -338,7 +351,7 @@ private fun ProfileMenuItem(
         Surface(
             modifier = Modifier.size(40.dp),
             shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            color = DeepEmerald.copy(alpha = 0.08f)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
@@ -356,13 +369,14 @@ private fun ProfileMenuItem(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Graphite
             )
             if (subtitle != null) {
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = SlateGray
                 )
             }
         }
@@ -371,7 +385,7 @@ private fun ProfileMenuItem(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,
             modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.outline
+            tint = StoneGray
         )
     }
 }

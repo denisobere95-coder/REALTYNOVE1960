@@ -1,6 +1,5 @@
 package com.denis.realtynova.core.ai
 
-import com.denis.realtynova.BuildConfig
 import com.denis.realtynova.core.domain.model.Property
 import com.google.firebase.vertexai.FirebaseVertexAI
 import com.google.firebase.vertexai.type.content
@@ -10,12 +9,23 @@ import javax.inject.Singleton
 
 @Singleton
 class GeminiManager @Inject constructor() {
-    private val model = FirebaseVertexAI.instance.generativeModel("gemini-1.5-flash")
+    private val model by lazy { 
+        try {
+            FirebaseVertexAI.instance.generativeModel("gemini-1.5-flash")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to initialize Gemini model")
+            null
+        }
+    }
     
     // Use a managed chat session for context persistence
-    private var chatSession = model.startChat()
+    private var chatSession: com.google.firebase.vertexai.Chat? = null
 
     suspend fun generateResponse(userPrompt: String, propertiesContext: List<Property>): String {
+        val currentModel = model ?: return "RealtyNova AI is currently offline while we upgrade our systems. Please check back shortly!"
+        
+        val currentChat = chatSession ?: currentModel.startChat().also { chatSession = it }
+        
         val contextInfo = if (propertiesContext.isNotEmpty()) {
             "Available Properties for this user's context:\n" + 
             propertiesContext.joinToString("\n") { 
@@ -44,7 +54,7 @@ class GeminiManager @Inject constructor() {
         """.trimIndent()
 
         return try {
-            val response = chatSession.sendMessage(
+            val response = currentChat.sendMessage(
                 content {
                     text(systemPrompt)
                     text(userPrompt)
@@ -54,7 +64,7 @@ class GeminiManager @Inject constructor() {
         } catch (e: Exception) {
             Timber.e(e, "Gemini generation failed")
             // Reset chat session on critical error to prevent stale state
-            chatSession = model.startChat()
+            chatSession = currentModel.startChat()
             "I'm currently experiencing a high volume of requests. Please tell me a bit more about the type of property you are looking for, and I'll get back to you shortly."
         }
     }

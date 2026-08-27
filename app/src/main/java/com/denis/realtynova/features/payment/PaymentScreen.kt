@@ -1,6 +1,8 @@
 package com.denis.realtynova.features.payment
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,21 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.denis.realtynova.core.designsystem.components.RealtyNovaButton
-import com.denis.realtynova.core.designsystem.components.ButtonVariant
-import com.denis.realtynova.core.designsystem.components.RealtyNovaTextField
-import com.denis.realtynova.core.designsystem.theme.DeepEmerald
-import com.denis.realtynova.core.designsystem.theme.ChampagneGold
-
-import androidx.compose.animation.core.tween
-import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.ViewModelStoreOwner
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import com.denis.realtynova.R
+import com.denis.realtynova.core.designsystem.components.*
+import com.denis.realtynova.core.designsystem.theme.*
 import com.denis.realtynova.core.util.PaymentUtils
-import com.denis.realtynova.core.designsystem.theme.MidnightEmerald
-import com.denis.realtynova.core.designsystem.theme.REALTYNOVATheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,180 +112,187 @@ private fun PaymentContent(
         )
     }
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { 
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Secure Checkout", fontWeight = FontWeight.Bold)
-                        Text("VERIFIED ENCRYPTED CONNECTION", style = MaterialTheme.typography.labelSmall, color = Color(0xFF2E7D32), letterSpacing = 1.sp)
+    CreativeBackground(
+        imageRes = R.drawable.img_17,
+        variant = BackgroundVariant.NAVY,
+        overlayAlpha = 0.88f
+    ) {
+        Scaffold(
+            modifier = modifier,
+            containerColor = Color.Transparent,
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { 
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Secure Checkout", fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("VERIFIED ENCRYPTED CONNECTION", style = MaterialTheme.typography.labelSmall, color = Color(0xFF4CAF50), letterSpacing = 1.sp)
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { /* Help */ }) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.HelpOutline, contentDescription = "Help", tint = Color.White)
+                        }
                     }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { /* Help */ }) {
-                        Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = "Help")
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
                 )
-            )
-        }
-    ) { innerPadding ->
-        if (uiState.isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = DeepEmerald)
             }
-        } else {
-            Box(modifier = Modifier.fillMaxSize()) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp),
-                    contentPadding = PaddingValues(vertical = 20.dp)
-                ) {
-                    item {
-                        PropertySummaryCard(uiState.property, amount)
-                    }
-
-                    item {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Shield, contentDescription = null, tint = DeepEmerald, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Select Payment Method",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
+        ) { innerPadding ->
+            if (uiState.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = ChampagneGold)
+                }
+            } else {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                            .padding(horizontal = 20.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp),
+                        contentPadding = PaddingValues(vertical = 20.dp)
+                    ) {
+                        item {
+                            PropertySummaryCard(uiState.property, amount)
                         }
-                    }
 
-                    item {
-                        PaymentMethodsRow(
-                            selectedMethod = selectedMethod,
-                            onMethodSelected = { selectedMethod = it }
-                        )
-                    }
-
-                    item {
-                        AnimatedContent(
-                            targetState = selectedMethod,
-                            transitionSpec = {
-                                fadeIn(animationSpec = tween(300)) togetherWith
-                                fadeOut(animationSpec = tween(300))
-                            },
-                            label = "PaymentForm"
-                        ) { method ->
-                            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                                when (method) {
-                                    PaymentMethodType.MPESA, PaymentMethodType.AIRTEL -> {
-                                        MobileMoneyForm(
-                                            phone = phone,
-                                            onPhoneChange = { if (it.length <= 10) phone = it.filter { c -> c.isDigit() } },
-                                            label = if (method == PaymentMethodType.MPESA) "M-Pesa Number" else "Airtel Money Number"
-                                        )
-                                    }
-                                    PaymentMethodType.CARD -> {
-                                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                                            CreditCardVisualizer(
-                                                number = cardNumber,
-                                                expiry = expiry,
-                                                brand = PaymentUtils.getCardBrand(cardNumber)
-                                            )
-                                            
-                                            CardForm(
-                                                number = cardNumber,
-                                                onNumberChange = { if (it.length <= 16) cardNumber = it.filter { c -> c.isDigit() } },
-                                                expiry = expiry,
-                                                onExpiryChange = { if (it.length <= 4) expiry = it.filter { c -> c.isDigit() } },
-                                                cvc = cvc,
-                                                onCvcChange = { if (it.length <= 3) cvc = it.filter { c -> c.isDigit() } }
-                                            )
-                                            
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                modifier = Modifier.clickable { saveCard = !saveCard }
-                                            ) {
-                                                Checkbox(
-                                                    checked = saveCard,
-                                                    onCheckedChange = { saveCard = it },
-                                                    colors = CheckboxDefaults.colors(checkedColor = DeepEmerald)
-                                                )
-                                                Text(
-                                                    text = "Securely save card for future payments",
-                                                    style = MaterialTheme.typography.bodySmall
-                                                )
-                                            }
-                                        }
-                                    }
-                                    PaymentMethodType.BANK -> {
-                                        BankSelection()
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        val isFormValid = when(selectedMethod) {
-                            PaymentMethodType.MPESA, PaymentMethodType.AIRTEL -> phone.length >= 9
-                            PaymentMethodType.CARD -> cardNumber.length == 16 && expiry.length == 4 && cvc.length == 3
-                            PaymentMethodType.BANK -> true
-                        }
-                        
-                        RealtyNovaButton(
-                            onClick = {
-                                when (selectedMethod) {
-                                    PaymentMethodType.MPESA, PaymentMethodType.AIRTEL -> {
-                                        onProcessMpesaPayment(phone, amount)
-                                    }
-                                    PaymentMethodType.CARD -> {
-                                        onProcessCardPayment(cardNumber, expiry, cvc, amount)
-                                    }
-                                    PaymentMethodType.BANK -> { /* Not implemented */ }
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth().height(60.dp),
-                            variant = ButtonVariant.Premium,
-                            enabled = !uiState.isProcessing && isFormValid
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(12.dp))
+                        item {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Shield, contentDescription = null, tint = ChampagneGold, modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "PAY KSH ${String.format("%,.0f", amount)}",
+                                    text = "Select Payment Method",
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    letterSpacing = 1.2.sp
+                                    color = Color.White
                                 )
                             }
                         }
-                    }
-                    
-                    item {
-                        PaymentFooter()
-                    }
-                }
 
-                if (uiState.isProcessing) {
-                    ProcessingOverlay(selectedMethod)
-                }
+                        item {
+                            PaymentMethodsRow(
+                                selectedMethod = selectedMethod,
+                                onMethodSelected = { selectedMethod = it }
+                            )
+                        }
 
-                if (uiState.paymentSuccess) {
-                    SuccessOverlay(onSuccess = onPaymentSuccess)
+                        item {
+                            AnimatedContent(
+                                targetState = selectedMethod,
+                                transitionSpec = {
+                                    fadeIn(animationSpec = tween(300)) togetherWith
+                                    fadeOut(animationSpec = tween(300))
+                                },
+                                label = "PaymentForm"
+                            ) { method ->
+                                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    when (method) {
+                                        PaymentMethodType.MPESA, PaymentMethodType.AIRTEL -> {
+                                            MobileMoneyForm(
+                                                phone = phone,
+                                                onPhoneChange = { if (it.length <= 10) phone = it.filter { c -> c.isDigit() } },
+                                                label = if (method == PaymentMethodType.MPESA) "M-Pesa Number" else "Airtel Money Number"
+                                            )
+                                        }
+                                        PaymentMethodType.CARD -> {
+                                            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                                CreditCardVisualizer(
+                                                    number = cardNumber,
+                                                    expiry = expiry,
+                                                    brand = PaymentUtils.getCardBrand(cardNumber)
+                                                )
+                                                
+                                                CardForm(
+                                                    number = cardNumber,
+                                                    onNumberChange = { if (it.length <= 16) cardNumber = it.filter { c -> c.isDigit() } },
+                                                    expiry = expiry,
+                                                    onExpiryChange = { if (it.length <= 4) expiry = it.filter { c -> c.isDigit() } },
+                                                    cvc = cvc,
+                                                    onCvcChange = { if (it.length <= 3) cvc = it.filter { c -> c.isDigit() } }
+                                                )
+                                                
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier.clickable { saveCard = !saveCard }
+                                                ) {
+                                                    Checkbox(
+                                                        checked = saveCard,
+                                                        onCheckedChange = { saveCard = it },
+                                                        colors = CheckboxDefaults.colors(checkedColor = ChampagneGold, uncheckedColor = Color.White.copy(alpha = 0.5f))
+                                                    )
+                                                    Text(
+                                                        text = "Securely save card for future payments",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = Color.White.copy(alpha = 0.8f)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        PaymentMethodType.BANK -> {
+                                            BankSelection()
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            val isFormValid = when(selectedMethod) {
+                                PaymentMethodType.MPESA, PaymentMethodType.AIRTEL -> phone.length >= 9
+                                PaymentMethodType.CARD -> cardNumber.length == 16 && expiry.length == 4 && cvc.length == 3
+                                PaymentMethodType.BANK -> true
+                            }
+                            
+                            RealtyNovaButton(
+                                onClick = {
+                                    when (selectedMethod) {
+                                        PaymentMethodType.MPESA, PaymentMethodType.AIRTEL -> {
+                                            onProcessMpesaPayment(phone, amount)
+                                        }
+                                        PaymentMethodType.CARD -> {
+                                            onProcessCardPayment(cardNumber, expiry, cvc, amount)
+                                        }
+                                        PaymentMethodType.BANK -> { /* Not implemented */ }
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth().height(60.dp),
+                                variant = ButtonVariant.Premium,
+                                enabled = !uiState.isProcessing && isFormValid
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text = "PAY KSH ${String.format(java.util.Locale.US, "%,.0f", amount)}",
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 1.2.sp
+                                    )
+                                }
+                            }
+                        }
+                        
+                        item {
+                            PaymentFooter()
+                        }
+                    }
+
+                    if (uiState.isProcessing) {
+                        ProcessingOverlay(selectedMethod)
+                    }
+
+                    if (uiState.paymentSuccess) {
+                        SuccessOverlay(onSuccess = onPaymentSuccess)
+                    }
                 }
             }
         }
@@ -358,19 +359,19 @@ fun BankSelection() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        color = Color.White.copy(alpha = 0.1f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Select Bank Transfer", fontWeight = FontWeight.Bold)
+            Text("Select Bank Transfer", fontWeight = FontWeight.Bold, color = Color.White)
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 "Direct bank transfers may take up to 24 hours to verify. Your reservation will be marked as 'Pending' until confirmed.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.White.copy(alpha = 0.7f)
             )
             Spacer(modifier = Modifier.height(16.dp))
-            OutlinedButton(onClick = {}, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = {}, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.outlinedButtonColors(contentColor = ChampagneGold), border = BorderStroke(1.dp, ChampagneGold)) {
                 Text("CHOOSE BANK")
             }
         }
@@ -385,12 +386,12 @@ fun PaymentFooter() {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Https, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(14.dp))
+            Icon(Icons.Default.Https, contentDescription = null, tint = Color(0xFF4CAF50), modifier = Modifier.size(14.dp))
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = "SECURE PCI-DSS COMPLIANT PAYMENT",
                 style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFF2E7D32),
+                color = Color(0xFF4CAF50),
                 letterSpacing = 1.sp
             )
         }
@@ -398,7 +399,7 @@ fun PaymentFooter() {
         Text(
             text = "By clicking pay, you agree to REALTYNOVA's terms of service and reservation policy. Funds will be held in escrow until lease confirmation.",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = Color.White.copy(alpha = 0.5f),
             textAlign = TextAlign.Center,
             fontSize = 10.sp,
             lineHeight = 14.sp
@@ -512,32 +513,33 @@ fun ProcessingOverlay(method: PaymentMethodType) {
 fun PropertySummaryCard(property: com.denis.realtynova.core.domain.model.Property?, amount: Double) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        color = Color.White.copy(alpha = 0.15f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = property?.title ?: "Property Reservation",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.ExtraBold
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White
             )
             Text(
                 text = property?.location ?: "Kenya",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.White.copy(alpha = 0.7f)
             )
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Color.White.copy(alpha = 0.2f))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Total Payable", style = MaterialTheme.typography.bodyLarge)
+                Text(text = "Total Payable", style = MaterialTheme.typography.bodyLarge, color = Color.White)
                 Text(
-                    text = if (amount.isNaN() || amount.isInfinite()) "KSh 0" else "KSh ${String.format("%,.0f", amount)}",
+                    text = if (amount.isNaN() || amount.isInfinite()) "KSh 0" else "KSh ${String.format(java.util.Locale.US, "%,.0f", amount)}",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = DeepEmerald
+                    color = ChampagneGold
                 )
             }
         }
@@ -586,10 +588,10 @@ fun PaymentMethodItem(
             .height(80.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        color = if (isSelected) DeepEmerald else MaterialTheme.colorScheme.surface,
+        color = if (isSelected) DeepEmerald else Color.White.copy(alpha = 0.1f),
         border = androidx.compose.foundation.BorderStroke(
             1.dp, 
-            if (isSelected) DeepEmerald else MaterialTheme.colorScheme.outlineVariant
+            if (isSelected) DeepEmerald else Color.White.copy(alpha = 0.2f)
         )
     ) {
         Column(
@@ -606,14 +608,14 @@ fun PaymentMethodItem(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                tint = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = type.displayName,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f)
             )
         }
     }
@@ -631,7 +633,7 @@ fun MobileMoneyForm(phone: String, onPhoneChange: (String) -> Unit, label: Strin
         Text(
             text = "You will receive an M-Pesa prompt on your phone to enter your PIN.",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = Color.White.copy(alpha = 0.6f)
         )
     }
 }

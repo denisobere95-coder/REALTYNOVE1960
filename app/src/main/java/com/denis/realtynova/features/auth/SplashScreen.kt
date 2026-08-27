@@ -25,8 +25,13 @@ import com.denis.realtynova.core.designsystem.components.RealtyNovaLogo
 import com.denis.realtynova.core.designsystem.theme.ChampagneGold
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
 import com.denis.realtynova.core.designsystem.theme.RealtyNovaTextStyles
+import com.denis.realtynova.core.domain.model.AuthState
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filterNot
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+
+import kotlinx.coroutines.withTimeoutOrNull
 
 @Composable
 fun SplashScreen(
@@ -35,7 +40,7 @@ fun SplashScreen(
     onNavigateToWelcome: () -> Unit,
     onNavigateToOnboarding: () -> Unit
 ) {
-    val currentUser by viewModel.currentUser.collectAsState()
+    val authState by viewModel.authState.collectAsState()
     val isOnboardingCompleted by viewModel.isOnboardingCompleted.collectAsState()
 
     val revealProgress = remember { Animatable(0f) }
@@ -71,11 +76,22 @@ fun SplashScreen(
             animationSpec = tween(1200, easing = FastOutSlowInEasing)
         )
         
-        delay(800)
+        // Wait for Brand Visibility AND Auth State with safety timeout
+        val finalAuthState = withTimeoutOrNull(3000L) {
+            snapshotFlow { authState }
+                .filterNot { it is AuthState.Initial }
+                .first()
+        } ?: AuthState.Unauthenticated // Default to unauthenticated on timeout
+            
+        // Minimal display time for brand recognition
+        delay(300)
         
-        when {
-            currentUser != null -> onNavigateToMain()
-            !isOnboardingCompleted -> onNavigateToOnboarding()
+        when (finalAuthState) {
+            is AuthState.Authenticated -> onNavigateToMain()
+            is AuthState.Unauthenticated -> {
+                if (!isOnboardingCompleted) onNavigateToOnboarding()
+                else onNavigateToWelcome()
+            }
             else -> onNavigateToWelcome()
         }
     }

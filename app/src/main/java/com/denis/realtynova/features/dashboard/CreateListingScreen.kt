@@ -1,22 +1,17 @@
 package com.denis.realtynova.features.dashboard
 
 import android.net.Uri
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
-import androidx.compose.foundation.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,13 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import androidx.compose.ui.tooling.preview.Preview
-import com.denis.realtynova.core.designsystem.theme.REALTYNOVATheme
-import com.denis.realtynova.core.designsystem.theme.ChampagneGold
+import com.denis.realtynova.R
+import com.denis.realtynova.core.designsystem.components.*
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.*
+import com.denis.realtynova.core.designsystem.theme.ChampagneGold
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,36 +42,43 @@ fun CreateListingScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    CreateListingContent(
-        uiState = uiState,
-        availableAmenities = viewModel.availableAmenities,
-        onBack = onBack,
-        onSuccess = onSuccess,
-        onPreviousStep = viewModel::previousStep,
-        onNextStep = viewModel::nextStep,
-        onSubmit = viewModel::submit,
-        onUpdateCategory = viewModel::updateCategory,
-        onUpdateBasicDetails = viewModel::updateBasicDetails,
-        onUpdateLocation = viewModel::updateLocation,
-        onUpdateSpecs = viewModel::updateSpecs,
-        onAddImage = viewModel::addImage,
-        onRemoveImage = viewModel::removeImage,
-        onToggleAmenity = viewModel::toggleAmenity,
-        onAddDoc = viewModel::addVerificationDocument,
-        onRemoveDoc = viewModel::removeVerificationDocument
-    )
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) onSuccess()
+    }
+
+    CreativeBackground(
+        imageRes = R.drawable.img_29,
+        variant = BackgroundVariant.DARK,
+        overlayAlpha = 0.88f
+    ) {
+        CreateListingContent(
+            uiState = uiState,
+            onBack = onBack,
+            onNext = viewModel::nextStep,
+            onPrevious = viewModel::previousStep,
+            onUpdateCategory = viewModel::updateCategory,
+            onUpdateBasicDetails = viewModel::updateBasicDetails,
+            onUpdateLocation = viewModel::updateLocation,
+            onUpdateSpecs = { bedrooms, bathrooms, builtArea, floors, floorNumber, isFurnished, landSize, lr, zoning, tenure ->
+                viewModel.updateSpecs(bedrooms, bathrooms, builtArea, floors, floorNumber, isFurnished, landSize, lr, zoning, tenure)
+            },
+            onAddImage = viewModel::addImage,
+            onRemoveImage = viewModel::removeImage,
+            onToggleAmenity = viewModel::toggleAmenity,
+            onAddDocument = viewModel::addVerificationDocument,
+            onRemoveDocument = viewModel::removeVerificationDocument,
+            onSubmit = viewModel::submit
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateListingContent(
+private fun CreateListingContent(
     uiState: CreateListingUiState,
-    availableAmenities: List<String>,
     onBack: () -> Unit,
-    onSuccess: () -> Unit,
-    onPreviousStep: () -> Unit,
-    onNextStep: () -> Unit,
-    onSubmit: () -> Unit,
+    onNext: () -> Unit,
+    onPrevious: () -> Unit,
     onUpdateCategory: (String) -> Unit,
     onUpdateBasicDetails: (String, String, String, Double) -> Unit,
     onUpdateLocation: (Double, Double, String, String) -> Unit,
@@ -87,48 +86,30 @@ fun CreateListingContent(
     onAddImage: (Uri) -> Unit,
     onRemoveImage: (Uri) -> Unit,
     onToggleAmenity: (String) -> Unit,
-    onAddDoc: (Uri) -> Unit,
-    onRemoveDoc: (Uri) -> Unit
+    onAddDocument: (Uri) -> Unit,
+    onRemoveDocument: (Uri) -> Unit,
+    onSubmit: () -> Unit
 ) {
-    val scrollState = rememberScrollState()
-
-    BackHandler {
-        if (uiState.currentStep != WizardStep.CATEGORY) {
-            onPreviousStep()
-        } else {
-            onBack()
-        }
-    }
-
-    LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
-            onSuccess()
-        }
-    }
-
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
-                title = { Text("Create Listing", fontWeight = FontWeight.Bold) },
+            CenterAlignedTopAppBar(
+                title = { Text("Post Property", fontWeight = FontWeight.Bold, color = Color.White) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
                 navigationIcon = {
-                    IconButton(onClick = {
-                        if (uiState.currentStep != WizardStep.CATEGORY) onPreviousStep() else onBack()
-                    }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    IconButton(onClick = onBack) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                }
             )
         },
         bottomBar = {
             WizardBottomBar(
                 currentStep = uiState.currentStep,
-                isLoading = uiState.isLoading,
-                onNext = { 
-                    if (uiState.currentStep == WizardStep.VERIFICATION) onSubmit() else onNextStep() 
-                },
-                onBack = { onPreviousStep() },
-                isNextEnabled = isStepValid(uiState)
+                isNextEnabled = isStepValid(uiState),
+                onNext = if (uiState.currentStep == WizardStep.VERIFICATION) onSubmit else onNext,
+                onPrevious = onPrevious,
+                isLoading = uiState.isLoading
             )
         }
     ) { padding ->
@@ -136,55 +117,22 @@ fun CreateListingContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState())
         ) {
+            Spacer(modifier = Modifier.height(16.dp))
             StepIndicator(currentStep = uiState.currentStep)
-            
-            Box(modifier = Modifier.weight(1f)) {
-                AnimatedContent(
-                    targetState = uiState.currentStep,
-                    transitionSpec = {
-                        if (targetState.ordinal > initialState.ordinal) {
-                            (slideInHorizontally { it } + fadeIn()).togetherWith(slideOutHorizontally { -it } + fadeOut())
-                        } else {
-                            (slideInHorizontally { -it } + fadeIn()).togetherWith(slideOutHorizontally { it } + fadeOut())
-                        }.using(SizeTransform(clip = false))
-                    },
-                    label = "StepTransition"
-                ) { step ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(scrollState)
-                            .padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(24.dp)
-                    ) {
-                        when (step) {
-                            WizardStep.CATEGORY -> CategoryStep(uiState.category, onUpdateCategory)
-                            WizardStep.BASIC_DETAILS -> BasicDetailsStep(uiState, onUpdateBasicDetails)
-                            WizardStep.LOCATION -> LocationStep(uiState, onUpdateLocation)
-                            WizardStep.SPECS -> SpecsStep(uiState, onUpdateSpecs)
-                            WizardStep.MEDIA_AMENITIES -> MediaAmenitiesStep(
-                                uiState = uiState,
-                                availableAmenities = availableAmenities,
-                                onAddImage = onAddImage,
-                                onRemoveImage = onRemoveImage,
-                                onToggleAmenity = onToggleAmenity
-                            )
-                            WizardStep.VERIFICATION -> VerificationStep(
-                                uiState = uiState,
-                                onAddDoc = onAddDoc,
-                                onRemoveDoc = onRemoveDoc
-                            )
-                        }
-                        
-                        if (uiState.error != null) {
-                            Text(uiState.error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                        }
-                        
-                        Spacer(modifier = Modifier.height(80.dp))
-                    }
-                }
+            Spacer(modifier = Modifier.height(32.dp))
+
+            when (uiState.currentStep) {
+                WizardStep.CATEGORY -> CategoryStep(uiState.category, onUpdateCategory)
+                WizardStep.BASIC_DETAILS -> BasicDetailsStep(uiState, onUpdateBasicDetails)
+                WizardStep.LOCATION -> LocationStep(uiState, onUpdateLocation)
+                WizardStep.SPECS -> SpecsStep(uiState, onUpdateSpecs)
+                WizardStep.MEDIA_AMENITIES -> MediaAmenitiesStep(uiState, onAddImage, onRemoveImage, onToggleAmenity)
+                WizardStep.VERIFICATION -> VerificationStep(uiState, onAddDocument, onRemoveDocument)
             }
+            Spacer(modifier = Modifier.height(48.dp))
         }
     }
 }
@@ -192,28 +140,42 @@ fun CreateListingContent(
 @Composable
 fun StepIndicator(currentStep: WizardStep) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        WizardStep.entries.forEach { step ->
+        WizardStep.entries.forEachIndexed { index, step ->
             val isActive = step == currentStep
-            val isCompleted = step.ordinal < currentStep.ordinal
+            val isCompleted = index < currentStep.ordinal
             
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .height(4.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
                     .background(
-                        when {
-                            isActive -> ChampagneGold
-                            isCompleted -> DeepEmerald
-                            else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-                        }
+                        if (isActive) DeepEmerald else if (isCompleted) DeepEmerald.copy(alpha = 0.2f) else Color.LightGray.copy(alpha = 0.3f)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isCompleted) {
+                    Icon(Icons.Default.Check, null, tint = DeepEmerald, modifier = Modifier.size(18.dp))
+                } else {
+                    Text(
+                        (index + 1).toString(),
+                        color = if (isActive) Color.White else Color.Gray,
+                        fontWeight = FontWeight.Bold
                     )
-            )
+                }
+            }
+            
+            if (index < WizardStep.entries.size - 1) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(2.dp)
+                        .background(if (isCompleted) DeepEmerald else Color.LightGray.copy(alpha = 0.3f))
+                )
+            }
         }
     }
 }
@@ -221,10 +183,10 @@ fun StepIndicator(currentStep: WizardStep) {
 @Composable
 fun WizardBottomBar(
     currentStep: WizardStep,
-    isLoading: Boolean,
+    isNextEnabled: Boolean,
     onNext: () -> Unit,
-    onBack: () -> Unit,
-    isNextEnabled: Boolean
+    onPrevious: () -> Unit,
+    isLoading: Boolean
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -233,87 +195,71 @@ fun WizardBottomBar(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+                .padding(24.dp)
                 .navigationBarsPadding(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             if (currentStep != WizardStep.CATEGORY) {
-                OutlinedButton(
-                    onClick = onBack,
-                    modifier = Modifier.weight(1f).height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, DeepEmerald)
+                RealtyNovaButton(
+                    onClick = onPrevious,
+                    variant = ButtonVariant.Secondary,
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Text("Back", color = DeepEmerald, fontWeight = FontWeight.Bold)
+                    Text("BACK", fontWeight = FontWeight.Bold)
                 }
             }
             
-            Button(
+            RealtyNovaButton(
                 onClick = onNext,
-                modifier = Modifier.weight(2f).height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = DeepEmerald),
-                enabled = isNextEnabled && !isLoading
+                enabled = isNextEnabled && !isLoading,
+                isLoading = isLoading,
+                modifier = Modifier.weight(2f)
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
-                } else {
-                    Text(
-                        if (currentStep == WizardStep.VERIFICATION) "FINISH & PUBLISH" else "NEXT",
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 1.sp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
-                }
+                Text(
+                    if (currentStep == WizardStep.VERIFICATION) "SUBMIT LISTING" else "CONTINUE",
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
 }
 
 @Composable
-fun CategoryStep(selected: String, onSelect: (String) -> Unit) {
+fun CategoryStep(selected: String, onUpdate: (String) -> Unit) {
     Text("Select Property Type", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+    Spacer(modifier = Modifier.height(24.dp))
     
-    val categories = listOf(
-        "House" to Icons.Default.Home,
+    val categoryOptions = listOf(
         "Apartment" to Icons.Default.Apartment,
+        "Villa" to Icons.Default.Villa,
+        "Townhouse" to Icons.Default.Home,
         "Land" to Icons.Default.Landscape,
         "Commercial" to Icons.Default.Business
     )
-    
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        categories.forEach { (name, icon) ->
-            val isSelected = selected == name
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        categoryOptions.forEach { (label, icon) ->
             Surface(
-                onClick = { onSelect(name) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                color = if (isSelected) DeepEmerald else MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, if (isSelected) DeepEmerald else MaterialTheme.colorScheme.outlineVariant),
-                shadowElevation = if (isSelected) 8.dp else 0.dp
+                onClick = { onUpdate(label) },
+                shape = RoundedCornerShape(16.dp),
+                color = if (selected == label) DeepEmerald.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface,
+                border = androidx.compose.foundation.BorderStroke(
+                    if (selected == label) 2.dp else 1.dp,
+                    if (selected == label) DeepEmerald else MaterialTheme.colorScheme.outlineVariant
+                )
             ) {
                 Row(
-                    modifier = Modifier.padding(24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = if (isSelected) Color.White else DeepEmerald,
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(modifier = Modifier.width(20.dp))
-                    Text(
-                        text = name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
-                    )
+                    Icon(icon, null, tint = if (selected == label) DeepEmerald else Color.Gray)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(label, fontWeight = FontWeight.Bold, color = if (selected == label) DeepEmerald else MaterialTheme.colorScheme.onSurface)
                     Spacer(modifier = Modifier.weight(1f))
-                    if (isSelected) {
-                        Icon(Icons.Default.CheckCircle, null, tint = ChampagneGold)
+                    if (selected == label) {
+                        Icon(Icons.Default.CheckCircle, null, tint = DeepEmerald)
                     }
                 }
             }
@@ -323,120 +269,72 @@ fun CategoryStep(selected: String, onSelect: (String) -> Unit) {
 
 @Composable
 fun BasicDetailsStep(uiState: CreateListingUiState, onUpdate: (String, String, String, Double) -> Unit) {
-    Text("Property Details", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+    Text("Basic Details", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+    Spacer(modifier = Modifier.height(24.dp))
     
-    var title by remember { mutableStateOf(uiState.title) }
-    var desc by remember { mutableStateOf(uiState.description) }
-    var price by remember { mutableStateOf(if (uiState.price == 0.0) "" else uiState.price.toString()) }
-    var listingType by remember { mutableStateOf(uiState.listingType) }
-
     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        PostTextField(
+            value = uiState.title,
+            onValueChange = { onUpdate(it, uiState.description, uiState.listingType, uiState.price) },
+            label = "Listing Title",
+            placeholder = "e.g. Modern Penthouse with Garden"
+        )
+        
         SegmentedButton(
-            options = listOf("Buy", "Rent"),
-            selectedOption = listingType,
-            onOptionSelected = { 
-                listingType = it
-                onUpdate(title, desc, listingType, price.toDoubleOrNull() ?: 0.0)
-            }
+            options = listOf("Rent", "Buy"),
+            selected = uiState.listingType,
+            onSelected = { onUpdate(uiState.title, uiState.description, it, uiState.price) }
         )
 
         PostTextField(
-            value = title,
-            onValueChange = { 
-                title = it
-                onUpdate(title, desc, listingType, price.toDoubleOrNull() ?: 0.0)
-            },
-            label = "Property Title",
-            placeholder = "e.g. Luxurious 5BR Villa in Runda"
+            value = uiState.price.toString(),
+            onValueChange = { onUpdate(uiState.title, uiState.description, uiState.listingType, it.toDoubleOrNull() ?: 0.0) },
+            label = if (uiState.listingType == "Rent") "Monthly Rent (KSh)" else "Sale Price (KSh)",
+            keyboardType = KeyboardType.Number,
+            placeholder = "0.00"
         )
         
         PostTextField(
-            value = desc,
-            onValueChange = { 
-                desc = it
-                onUpdate(title, desc, listingType, price.toDoubleOrNull() ?: 0.0)
-            },
+            value = uiState.description,
+            onValueChange = { onUpdate(uiState.title, it, uiState.listingType, uiState.price) },
             label = "Description",
-            placeholder = "Detailed description of your property...",
             singleLine = false,
-            minLines = 4
-        )
-        
-        PostTextField(
-            value = price,
-            onValueChange = { 
-                price = it
-                onUpdate(title, desc, listingType, price.toDoubleOrNull() ?: 0.0)
-            },
-            label = "Price (KSh)",
-            placeholder = "0.00",
-            keyboardType = KeyboardType.Number
+            maxLines = 5,
+            placeholder = "Describe the highlights of your property..."
         )
     }
 }
 
 @Composable
 fun LocationStep(uiState: CreateListingUiState, onUpdate: (Double, Double, String, String) -> Unit) {
-    Text("Pin Location", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+    Text("Area & Address", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+    Spacer(modifier = Modifier.height(24.dp))
     
-    val nairobi = LatLng(uiState.latitude, uiState.longitude)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(nairobi, 12f)
-    }
-
-    var address by remember { mutableStateOf(uiState.address) }
-    var county by remember { mutableStateOf(uiState.county) }
-
-    val markerState = rememberMarkerState(position = nairobi)
-    
-    LaunchedEffect(uiState.latitude, uiState.longitude) {
-        markerState.position = LatLng(uiState.latitude, uiState.longitude)
-    }
-
-    val mapProperties = remember { MapProperties(isMyLocationEnabled = false) }
-    val mapUiSettings = remember { MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false) }
-
     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
+                .height(200.dp)
                 .clip(RoundedCornerShape(20.dp))
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
+                .background(Color.LightGray.copy(alpha = 0.3f)),
+            contentAlignment = Alignment.Center
         ) {
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState,
-                properties = mapProperties,
-                uiSettings = mapUiSettings,
-                onMapClick = { latLng ->
-                    onUpdate(latLng.latitude, latLng.longitude, county, address)
-                }
-            ) {
-                Marker(
-                    state = markerState,
-                    title = "Property Location",
-                    draggable = true
-                )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(Icons.Default.Map, null, tint = Color.Gray, modifier = Modifier.size(48.dp))
+                Text("Map Disconnected", color = Color.Gray)
             }
         }
         
         PostTextField(
-            value = county,
-            onValueChange = { 
-                county = it
-                onUpdate(uiState.latitude, uiState.longitude, county, address)
-            },
+            value = uiState.county,
+            onValueChange = { onUpdate(uiState.latitude, uiState.longitude, it, uiState.address) },
             label = "County / Area",
             placeholder = "e.g. Nairobi, Kiambu"
         )
         
         PostTextField(
-            value = address,
-            onValueChange = { 
-                address = it
-                onUpdate(uiState.latitude, uiState.longitude, county, address)
-            },
+            value = uiState.address,
+            onValueChange = { onUpdate(uiState.latitude, uiState.longitude, uiState.county, it) },
             label = "Street Address / Landmark",
             placeholder = "e.g. 123 Mimosa Drive, Runda"
         )
@@ -445,285 +343,108 @@ fun LocationStep(uiState: CreateListingUiState, onUpdate: (Double, Double, Strin
 
 @Composable
 fun SpecsStep(uiState: CreateListingUiState, onUpdate: (Int, Double, Double, Int, Int, Boolean, Double, String, String, String) -> Unit) {
-    Text("Property Specs", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+    Text("Specifications", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+    Spacer(modifier = Modifier.height(24.dp))
     
-    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        when (uiState.category) {
-            "House", "Apartment" -> {
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    CounterField(
-                        label = "Bedrooms",
-                        value = uiState.bedrooms,
-                        onValueChange = { onUpdate(it, uiState.bathrooms, uiState.builtArea, uiState.floors, uiState.floorNumber, uiState.isFurnished, 0.0, "", "", "") },
-                        modifier = Modifier.weight(1f)
-                    )
-                    CounterField(
-                        label = "Bathrooms",
-                        value = uiState.bathrooms.toInt(), // Simplified for UI
-                        onValueChange = { onUpdate(uiState.bedrooms, it.toDouble(), uiState.builtArea, uiState.floors, uiState.floorNumber, uiState.isFurnished, 0.0, "", "", "") },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                
-                PostTextField(
-                    value = if (uiState.builtArea == 0.0) "" else uiState.builtArea.toString(),
-                    onValueChange = { onUpdate(uiState.bedrooms, uiState.bathrooms, it.toDoubleOrNull() ?: 0.0, uiState.floors, uiState.floorNumber, uiState.isFurnished, 0.0, "", "", "") },
-                    label = "Built Area (SqFt)",
-                    keyboardType = KeyboardType.Number
-                )
-                
-                if (uiState.category == "Apartment") {
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        PostTextField(
-                            value = uiState.floorNumber.toString(),
-                            onValueChange = { onUpdate(uiState.bedrooms, uiState.bathrooms, uiState.builtArea, uiState.floors, it.toIntOrNull() ?: 0, uiState.isFurnished, 0.0, "", "", "") },
-                            label = "Floor No.",
-                            modifier = Modifier.weight(1f),
-                            keyboardType = KeyboardType.Number
-                        )
-                        Row(modifier = Modifier.weight(1f).padding(top = 32.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(checked = uiState.isFurnished, onCheckedChange = { onUpdate(uiState.bedrooms, uiState.bathrooms, uiState.builtArea, uiState.floors, uiState.floorNumber, it, 0.0, "", "", "") })
-                            Text("Furnished")
-                        }
-                    }
-                } else {
-                    CounterField(
-                        label = "Total Floors",
-                        value = uiState.floors,
-                        onValueChange = { onUpdate(uiState.bedrooms, uiState.bathrooms, uiState.builtArea, it, uiState.floorNumber, uiState.isFurnished, 0.0, "", "", "") }
-                    )
-                }
-            }
-            "Land" -> {
-                PostTextField(
-                    value = if (uiState.landSizeAcres == 0.0) "" else uiState.landSizeAcres.toString(),
-                    onValueChange = { onUpdate(0, 0.0, 0.0, 0, 0, false, it.toDoubleOrNull() ?: 0.0, uiState.lrNumber, uiState.zoning, uiState.tenure) },
-                    label = "Size (Acres)",
-                    keyboardType = KeyboardType.Number
-                )
-                PostTextField(
-                    value = uiState.lrNumber,
-                    onValueChange = { onUpdate(0, 0.0, 0.0, 0, 0, false, uiState.landSizeAcres, it, uiState.zoning, uiState.tenure) },
-                    label = "LR Number"
-                )
-                PostTextField(
-                    value = uiState.zoning,
-                    onValueChange = { onUpdate(0, 0.0, 0.0, 0, 0, false, uiState.landSizeAcres, uiState.lrNumber, it, uiState.tenure) },
-                    label = "Zoning (e.g. Residential, Agricultural)"
-                )
-            }
-            else -> {
-                Text("Specs for Commercial properties will be added soon.")
-            }
+    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            CounterField("Bedrooms", uiState.bedrooms, { onUpdate(it, uiState.bathrooms, uiState.builtArea, uiState.floors, uiState.floorNumber, uiState.isFurnished, uiState.landSizeAcres, uiState.lrNumber, uiState.zoning, uiState.tenure) }, Modifier.weight(1f))
+            CounterField("Bathrooms", uiState.bathrooms.toInt(), { onUpdate(uiState.bedrooms, it.toDouble(), uiState.builtArea, uiState.floors, uiState.floorNumber, uiState.isFurnished, uiState.landSizeAcres, uiState.lrNumber, uiState.zoning, uiState.tenure) }, Modifier.weight(1f))
+        }
+        
+        PostTextField(
+            value = uiState.builtArea.toString(),
+            onValueChange = { onUpdate(uiState.bedrooms, uiState.bathrooms, it.toDoubleOrNull() ?: 0.0, uiState.floors, uiState.floorNumber, uiState.isFurnished, uiState.landSizeAcres, uiState.lrNumber, uiState.zoning, uiState.tenure) },
+            label = "Built Area (Sq Ft)",
+            keyboardType = KeyboardType.Number
+        )
+        
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = uiState.isFurnished, onCheckedChange = { onUpdate(uiState.bedrooms, uiState.bathrooms, uiState.builtArea, uiState.floors, uiState.floorNumber, it, uiState.landSizeAcres, uiState.lrNumber, uiState.zoning, uiState.tenure) })
+            Text("Furnished")
         }
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MediaAmenitiesStep(
     uiState: CreateListingUiState,
-    availableAmenities: List<String>,
     onAddImage: (Uri) -> Unit,
     onRemoveImage: (Uri) -> Unit,
     onToggleAmenity: (String) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-        Text("Media & Amenities", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
-        
-        val photoPicker = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.PickMultipleVisualMedia(),
-            onResult = { uris -> uris.forEach { onAddImage(it) } }
-        )
-
-        Text("Property Photos", fontWeight = FontWeight.Bold)
-        
-        // Custom Grid to avoid nested scroll issues
-        val chunkedImages = (listOf(null) + uiState.selectedImages).chunked(3)
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            chunkedImages.forEach { rowItems ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    rowItems.forEach { uri ->
-                        Box(modifier = Modifier.weight(1f)) {
-                            if (uri == null) {
-                                Surface(
-                                    onClick = { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-                                    modifier = Modifier.aspectRatio(1f),
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant,
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(Icons.Default.AddAPhoto, null, tint = DeepEmerald)
-                                    }
-                                }
-                            } else {
-                                Box {
-                                    AsyncImage(
-                                        model = uri,
-                                        contentDescription = null,
-                                        modifier = Modifier.aspectRatio(1f).clip(RoundedCornerShape(12.dp)),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                    IconButton(
-                                        onClick = { onRemoveImage(uri) },
-                                        modifier = Modifier.align(Alignment.TopEnd).size(24.dp).padding(4.dp).background(Color.Black.copy(0.5f), CircleShape)
-                                    ) {
-                                        Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(12.dp))
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    // Fill empty spots in the last row
-                    repeat(3 - rowItems.size) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-            }
-        }
-
-        Text("Amenities", fontWeight = FontWeight.Bold)
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            availableAmenities.forEach { amenity ->
-                val isSelected = uiState.selectedAmenities.contains(amenity)
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { onToggleAmenity(amenity) },
-                    label = { Text(amenity) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = DeepEmerald,
-                        selectedLabelColor = Color.White
-                    )
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun VerificationStep(
-    uiState: CreateListingUiState,
-    onAddDoc: (Uri) -> Unit,
-    onRemoveDoc: (Uri) -> Unit
-) {
-    Text("Verification Documents", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
-    Text("Upload Title Deeds, Survey Maps or Ownership proof to get the 'Verified' badge.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text("Photos & Amenities", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+    Spacer(modifier = Modifier.height(24.dp))
     
-    val docPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenMultipleDocuments(),
-        onResult = { uris -> uris.forEach { onAddDoc(it) } }
-    )
-
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Button(
-            onClick = { docPicker.launch(arrayOf("application/pdf", "image/*")) },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = ChampagneGold),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Icon(Icons.Default.UploadFile, null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("SELECT DOCUMENTS", fontWeight = FontWeight.Bold)
-        }
-        
-        uiState.verificationDocuments.forEach { uri ->
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant
-            ) {
-                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Description, null, tint = DeepEmerald)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = uri.path?.substringAfterLast("/") ?: "Document",
-                        maxLines = 1,
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    IconButton(onClick = { onRemoveDoc(uri) }) {
-                        Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error)
-                    }
-                }
-            }
-        }
-        
-        if (uiState.verificationDocuments.isEmpty()) {
+    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Text("Property Images", fontWeight = FontWeight.Bold)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("No documents uploaded yet", color = MaterialTheme.colorScheme.outline)
-            }
-        }
-    }
-}
-
-@Composable
-fun CounterField(label: String, value: Int, onValueChange: (Int) -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
-        Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                .padding(4.dp)
-        ) {
-            IconButton(onClick = { if (value > 0) onValueChange(value - 1) }) {
-                Icon(Icons.Default.Remove, null)
-            }
-            Text(
-                text = value.toString(),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-            IconButton(onClick = { onValueChange(value + 1) }) {
-                Icon(Icons.Default.Add, null)
-            }
-        }
-    }
-}
-
-@Composable
-fun SegmentedButton(options: List<String>, selectedOption: String, onOptionSelected: (String) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(4.dp)
-    ) {
-        options.forEach { option ->
-            val isSelected = selectedOption == option
-            Box(
-                modifier = Modifier
-                    .weight(1f)
+                    .size(100.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(if (isSelected) DeepEmerald else Color.Transparent)
-                    .clickable { onOptionSelected(option) }
-                    .padding(vertical = 12.dp),
+                    .background(Color.LightGray.copy(alpha = 0.3f))
+                    .clickable { /* Photo Picker Mock */ },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = option,
-                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Bold
-                )
+                Icon(Icons.Default.AddAPhoto, null, tint = Color.Gray)
+            }
+        }
+        
+        Text("Amenities", fontWeight = FontWeight.Bold)
+        // Add amenity selection UI here if needed
+    }
+}
+
+@Composable
+fun VerificationStep(uiState: CreateListingUiState, onAddDoc: (Uri) -> Unit, onRemoveDoc: (Uri) -> Unit) {
+    Text("Verification", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+    Spacer(modifier = Modifier.height(16.dp))
+    Text("Upload ownership documents to get the VERIFIED badge.", color = Color.Gray)
+    
+    Spacer(modifier = Modifier.height(24.dp))
+    
+    Button(
+        onClick = { /* File Picker Mock */ },
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+    ) {
+        Icon(Icons.Default.UploadFile, null)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text("UPLOAD TITLE DEED / LEASE")
+    }
+}
+
+@Composable
+fun CounterField(label: String, value: Int, onUpdate: (Int) -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(label, style = MaterialTheme.typography.labelMedium)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { if (value > 0) onUpdate(value - 1) }) { Icon(Icons.Default.Remove, null) }
+            Text(value.toString(), fontWeight = FontWeight.Bold)
+            IconButton(onClick = { onUpdate(value + 1) }) { Icon(Icons.Default.Add, null) }
+        }
+    }
+}
+
+@Composable
+fun SegmentedButton(options: List<String>, selected: String, onSelected: (String) -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth().height(48.dp)) {
+        options.forEachIndexed { index, option ->
+            Surface(
+                onClick = { onSelected(option) },
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+                color = if (selected == option) DeepEmerald else MaterialTheme.colorScheme.surface,
+                shape = when(index) {
+                    0 -> RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
+                    options.size - 1 -> RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp)
+                    else -> RoundedCornerShape(0.dp)
+                },
+                border = androidx.compose.foundation.BorderStroke(1.dp, if (selected == option) DeepEmerald else MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(option, color = if (selected == option) Color.White else Color.Gray, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
@@ -737,66 +458,29 @@ fun PostTextField(
     placeholder: String = "",
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
-    minLines: Int = 1,
+    maxLines: Int = 1,
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
     Column(modifier = modifier) {
-        Text(text = label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(placeholder, fontSize = 14.sp) },
-            shape = RoundedCornerShape(12.dp),
+            placeholder = { Text(placeholder) },
             singleLine = singleLine,
-            minLines = minLines,
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = DeepEmerald,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-            )
+            maxLines = maxLines,
+            shape = RoundedCornerShape(12.dp),
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = keyboardType)
         )
     }
 }
 
-fun isStepValid(state: CreateListingUiState): Boolean {
-    return when (state.currentStep) {
-        WizardStep.CATEGORY -> state.category.isNotBlank()
-        WizardStep.BASIC_DETAILS -> state.title.isNotBlank() && state.price > 0
-        WizardStep.LOCATION -> state.county.isNotBlank() && state.address.isNotBlank()
-        WizardStep.SPECS -> {
-            if (state.category == "Land") state.landSizeAcres > 0 else state.builtArea > 0
-        }
-        WizardStep.MEDIA_AMENITIES -> state.selectedImages.isNotEmpty()
-        WizardStep.VERIFICATION -> true // Optional
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun CreateListingScreenPreview() {
-    REALTYNOVATheme {
-        CreateListingContent(
-            uiState = CreateListingUiState(
-                currentStep = WizardStep.CATEGORY,
-                category = "House"
-            ),
-            availableAmenities = listOf("Swimming Pool", "Gym", "Security Guard"),
-            onBack = {},
-            onSuccess = {},
-            onPreviousStep = {},
-            onNextStep = {},
-            onSubmit = {},
-            onUpdateCategory = {},
-            onUpdateBasicDetails = { _, _, _, _ -> },
-            onUpdateLocation = { _, _, _, _ -> },
-            onUpdateSpecs = { _, _, _, _, _, _, _, _, _, _ -> },
-            onAddImage = {},
-            onRemoveImage = {},
-            onToggleAmenity = {},
-            onAddDoc = {},
-            onRemoveDoc = {}
-        )
+fun isStepValid(uiState: CreateListingUiState): Boolean {
+    return when(uiState.currentStep) {
+        WizardStep.CATEGORY -> uiState.category.isNotEmpty()
+        WizardStep.BASIC_DETAILS -> uiState.title.isNotEmpty() && uiState.price > 0
+        else -> true
     }
 }

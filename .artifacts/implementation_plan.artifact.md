@@ -1,42 +1,51 @@
-# Implementation Plan - Fix Build and Code Errors
+# Creative Background Integration
 
-This plan addresses several technical issues and inconsistencies found in the project, including invalid SDK versions, redundant navigation files, and non-idiomatic navigation checks.
+This plan details the addition of immersive, creative background images to all screens (except Welcome, Home, and Onboarding) to enhance the premium feel of RealtyNova while maintaining accessibility and readability.
 
 ## User Review Required
 
-> [!IMPORTANT]
-> - `compileSdk` and `targetSdk` are being downgraded from 37 to 35. API 37 is not yet available in stable Android releases.
-> - Android Gradle Plugin (AGP) is being downgraded from 9.3.1 to 8.7.2 to match stable release patterns.
-> - Redundant navigation files (`NavGraph.kt`, `AppNovHost.kt`) will be deleted.
+> [!NOTE]
+> I have designed a reusable `CreativeBackground` component that uses brand-aligned gradients (Deep Emerald, Professional Navy) to ensure that text and interactive elements remain perfectly legible on top of the images.
 
 ## Proposed Changes
 
-### Build Configuration
+### Design System
 
-#### [MODIFY] [libs.versions.toml](file:///C:/Users/denis/AndroidStudioProjects/REALTYNOVA/gradle/libs.versions.toml)
-- Update `agp` version to `8.7.2`.
+#### [NEW] [CreativeBackground.kt](file:///C:/Users/denis/OneDrive/Downloads/REALTYNOVE1960-master/REALTYNOVE1960-master/app/src/main/java/com/denis/realtynova/core/designsystem/components/CreativeBackground.kt)
+- Reusable component with high-fidelity gradient overlays.
 
-#### [MODIFY] [app/build.gradle.kts](file:///C:/Users/denis/AndroidStudioProjects/REALTYNOVA/app/build.gradle.kts)
-- Change `compileSdk` and `targetSdk` to `35`.
+### Screen Enhancements
 
-### Navigation Cleanup
+I will apply appropriate architectural and luxury imagery to each screen category:
 
-#### [DELETE] [NavGraph.kt](file:///C:/Users/denis/AndroidStudioProjects/REALTYNOVA/app/src/main/java/com/denis/realtynova/core/navigation/NavGraph.kt)
-- This file is redundant and uses old route definitions.
+#### 1. Discovery & Search (Navy/Professional Theme)
+- `SearchScreen.kt`
+- `MapScreen.kt` (if applicable)
+- `AiAssistantScreen.kt`
+- `MatchmakerScreen.kt`
 
-#### [DELETE] [AppNovHost.kt](file:///C:/Users/denis/AndroidStudioProjects/REALTYNOVA/app/src/main/java/com/denis/realtynova/core/navigation/AppNovHost.kt)
-- This file is empty.
+#### 2. Personal & Communication (Emerald/Trust Theme)
+- `ProfileScreen.kt`
+- `EditProfileScreen.kt`
+- `SavedScreen.kt`
+- `MessagesScreen.kt`
+- `ChatDetailScreen.kt`
+- `NotificationsScreen.kt`
 
-### Code Improvements
+#### 3. Dashboards & Management (Dark/Elite Theme)
+- `AdminDashboardScreen.kt`
+- `AgentDashboardScreen.kt`
+- `AdminModerationScreen.kt`
+- `CreateListingScreen.kt`
 
-#### [MODIFY] [MainActivity.kt](file:///C:/Users/denis/AndroidStudioProjects/REALTYNOVA/app/src/main/java/com/denis/realtynova/MainActivity.kt)
-- Refactor `showBottomBar` and `selectedIndex` to use type-safe `hasRoute` checks from Jetpack Navigation 2.8.
-- Add missing trailing comma as suggested by analysis.
+#### 4. Financial & Insights (Gold/Premium Theme)
+- `MortgageCalculatorScreen.kt`
+- `MarketInsightsScreen.kt`
+- `CountyExplorerScreen.kt`
 
 ## Verification Plan
 
-### Automated Tests
-- Run `./gradlew assembleDebug` to ensure build succeeds with corrected versions.
-
 ### Manual Verification
-- Deploy the app to a device/emulator to verify that navigation and the bottom bar work as expected.
+- Visual inspection of each screen to ensure text contrast is high.
+- Verify that background images do not interfere with scroll performance.
+- Check both Light and Dark mode behavior.

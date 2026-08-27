@@ -34,6 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.denis.realtynova.core.designsystem.components.CreativeBackground
+import com.denis.realtynova.core.designsystem.components.BackgroundVariant
+import com.denis.realtynova.R
 import com.denis.realtynova.core.domain.model.Property
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
 import com.denis.realtynova.core.designsystem.theme.ChampagneGold
@@ -61,37 +64,43 @@ fun AiAssistantScreen(
         }
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = { AiTopBar(onBack = onBack) },
-        bottomBar = {
-            AiInputDock(
-                value = query,
-                onValueChange = { query = it },
-                onSend = {
-                    if (query.isNotBlank()) {
-                        viewModel.sendMessage(query.trim())
-                        query = ""
+    CreativeBackground(
+        imageRes = R.drawable.img_21,
+        variant = BackgroundVariant.NAVY,
+        overlayAlpha = 0.88f
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = { AiTopBar(onBack = onBack) },
+            bottomBar = {
+                AiInputDock(
+                    value = query,
+                    onValueChange = { query = it },
+                    onSend = {
+                        if (query.isNotBlank()) {
+                            viewModel.sendMessage(query.trim())
+                            query = ""
+                        }
                     }
-                }
-            )
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            if (messages.isEmpty()) {
-                item { AiWelcomeHero(onSuggestionClick = { query = it }) }
-            }
-            items(items = messages) { message ->
-                PremiumChatBubble(
-                    message = message,
-                    onScheduleViewing = { id -> viewModel.scheduleViewing(id) },
-                    onPropertyClick = onPropertyClick
                 )
+            }
+        ) { innerPadding ->
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                if (messages.isEmpty()) {
+                    item { AiWelcomeHero(onSuggestionClick = { query = it }) }
+                }
+                items(items = messages) { message ->
+                    PremiumChatBubble(
+                        message = message,
+                        onScheduleViewing = { id -> viewModel.scheduleViewing(id) },
+                        onPropertyClick = onPropertyClick
+                    )
+                }
             }
         }
     }

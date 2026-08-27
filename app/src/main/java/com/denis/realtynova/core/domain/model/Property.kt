@@ -74,3 +74,22 @@ data class Property(
     val apartmentDetails: ApartmentDetails? = null,
     val landDetails: LandDetails? = null
 )
+
+data class SearchFilter(
+    val query: String = "",
+    val location: String? = null,
+    val propertyType: String? = null,
+    val listingType: String? = null,
+    val minPrice: Double? = null,
+    val maxPrice: Double? = null,
+    val bedrooms: Int? = null,
+    val bathrooms: Double? = null,
+    val amenities: List<String> = emptyList(),
+    val isVerified: Boolean = false,
+    val minArea: Double? = null,
+    val sortBy: SortOrder = SortOrder.NEWEST
+)
+
+enum class SortOrder {
+    NEWEST, PRICE_LOW_HIGH, PRICE_HIGH_LOW, RELEVANCE
+}

@@ -26,6 +26,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import com.denis.realtynova.core.designsystem.components.CreativeBackground
+import com.denis.realtynova.core.designsystem.components.BackgroundVariant
+import com.denis.realtynova.R
 import com.denis.realtynova.core.designsystem.theme.DeepEmerald
 import com.denis.realtynova.core.designsystem.theme.ChampagneGold
 import com.denis.realtynova.core.designsystem.theme.RealtyNovaTextStyles
@@ -37,68 +40,73 @@ fun AdminDashboardScreen(
     onBack: () -> Unit,
     onNavigateToModeration: () -> Unit = {}
 ) {
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("CORE CONTROL CENTER", fontWeight = FontWeight.Black, letterSpacing = 2.sp, fontSize = 14.sp) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Black,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+    CreativeBackground(
+        imageRes = R.drawable.img_8,
+        variant = BackgroundVariant.DARK,
+        overlayAlpha = 0.92f
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("CORE CONTROL CENTER", fontWeight = FontWeight.Black, letterSpacing = 2.sp, fontSize = 14.sp) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White
+                    )
                 )
-            )
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(Color.Black),
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            item { SystemHealthHeader() }
-            
-            item {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    StatCard(
-                        modifier = Modifier.weight(1f),
-                        label = "ACTIVE USERS",
-                        value = "12,842",
-                        trend = "+14%",
-                        color = DeepEmerald
-                    )
-                    StatCard(
-                        modifier = Modifier.weight(1f),
-                        label = "ESCROW FUNDS",
-                        value = "KSh 420M",
-                        trend = "+8.2%",
-                        color = ChampagneGold
-                    )
-                }
             }
+        ) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                item { SystemHealthHeader() }
+                
+                item {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        StatCard(
+                            modifier = Modifier.weight(1f),
+                            label = "ACTIVE USERS",
+                            value = "12,842",
+                            trend = "+14%",
+                            color = DeepEmerald
+                        )
+                        StatCard(
+                            modifier = Modifier.weight(1f),
+                            label = "ESCROW FUNDS",
+                            value = "KSh 420M",
+                            trend = "+8.2%",
+                            color = ChampagneGold
+                        )
+                    }
+                }
 
-            item { AdminSectionHeader(title = "AI CONCIERGE HEALTH") }
-            item { AiHealthMonitor() }
+                item { AdminSectionHeader(title = "AI CONCIERGE HEALTH") }
+                item { AiHealthMonitor() }
 
-            item { AdminSectionHeader(title = "SYSTEM COMMANDS") }
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    CommandButton(
-                        icon = Icons.Default.VerifiedUser,
-                        title = "Approve Pending Properties",
-                        count = "24",
-                        onClick = onNavigateToModeration
-                    )
-                    CommandButton(icon = Icons.Default.BugReport, title = "View System Logs", color = Color(0xFFD64545))
-                    CommandButton(icon = Icons.Default.CloudSync, title = "Sync Global Market Data")
-                    CommandButton(icon = Icons.Default.SettingsSuggest, title = "Adjust AI Temperature")
+                item { AdminSectionHeader(title = "SYSTEM COMMANDS") }
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        CommandButton(
+                            icon = Icons.Default.VerifiedUser,
+                            title = "Approve Pending Properties",
+                            count = "24",
+                            onClick = onNavigateToModeration
+                        )
+                        CommandButton(icon = Icons.Default.BugReport, title = "View System Logs", color = Color(0xFFD64545))
+                        CommandButton(icon = Icons.Default.CloudSync, title = "Sync Global Market Data")
+                        CommandButton(icon = Icons.Default.SettingsSuggest, title = "Adjust AI Temperature")
+                    }
                 }
             }
         }

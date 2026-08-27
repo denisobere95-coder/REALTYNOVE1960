@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import coil.compose.AsyncImage
 import com.denis.realtynova.R
 import com.denis.realtynova.core.designsystem.components.RealtyNovaButton
@@ -551,7 +552,7 @@ fun PropertySpecs(property: Property) {
         ) {
             SpecItem(icon = Icons.Default.Bed, value = property.bedrooms.toString(), label = "Bedrooms")
             SpecItem(icon = Icons.Default.Bathtub, value = property.bathrooms.toString(), label = "Bathrooms")
-            SpecItem(icon = Icons.Default.SquareFoot, value = String.format(Locale.getDefault(), "%,.0f", property.areaSqFt), label = "SqFt")
+            SpecItem(icon = Icons.Default.SquareFoot, value = String.format(LocalConfiguration.current.locales[0], "%,.0f", property.areaSqFt), label = "SqFt")
         }
     }
 }

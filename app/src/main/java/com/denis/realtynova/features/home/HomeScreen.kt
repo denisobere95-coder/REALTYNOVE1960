@@ -30,17 +30,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import coil.compose.AsyncImage
 import com.denis.realtynova.R
-import com.denis.realtynova.core.designsystem.components.MarketPulseCard
-import com.denis.realtynova.core.designsystem.components.NovaAiFab
-import com.denis.realtynova.core.designsystem.components.PropertyCard
-import com.denis.realtynova.core.designsystem.components.RealtyNovaSearchBar
+import com.denis.realtynova.core.designsystem.components.*
 import com.denis.realtynova.core.designsystem.theme.*
 import com.denis.realtynova.core.domain.model.Property
 import com.denis.realtynova.core.domain.model.UserRole
 import com.denis.realtynova.core.util.PriceFormatter
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 data class HomeCategory(val title: String, val iconRes: Int, val subtitle: String)
@@ -49,7 +49,7 @@ data class HomeCategory(val title: String, val iconRes: Int, val subtitle: Strin
 fun HomeScreen(
     onNavigateToDetail: (String) -> Unit = {},
     onNavigateToAiAssistant: () -> Unit = {},
-    onNavigateToSearch: () -> Unit = {},
+    onNavigateToSearch: (String?) -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToMessages: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
@@ -63,6 +63,7 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val userRole by viewModel.userRole.collectAsState()
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     val activity = context as? Activity
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -107,7 +108,10 @@ fun HomeScreen(
             HomeScreenContent(
                 uiState = uiState,
                 onNavigateToDetail = onNavigateToDetail,
-                onNavigateToAiAssistant = onNavigateToAiAssistant,
+                onNavigateToAiAssistant = { 
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onNavigateToAiAssistant() 
+                },
                 onNavigateToSearch = onNavigateToSearch,
                 onNavigateToNotifications = onNavigateToNotifications,
                 onNavigateToMessages = onNavigateToMessages,
@@ -115,7 +119,10 @@ fun HomeScreen(
                 onNavigateToCountyExplorer = onNavigateToCountyExplorer,
                 onNavigateToMarketInsights = onNavigateToMarketInsights,
                 onNavigateToMatchmaker = onNavigateToMatchmaker,
-                onToggleFavorite = viewModel::toggleFavorite,
+                onToggleFavorite = { id ->
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    viewModel.toggleFavorite(id)
+                },
                 onRefresh = viewModel::refresh,
                 onExitApp = { activity?.finish() }
             )
@@ -128,7 +135,7 @@ fun HomeScreenContent(
     uiState: HomeUiState,
     onNavigateToDetail: (String) -> Unit,
     onNavigateToAiAssistant: () -> Unit,
-    onNavigateToSearch: () -> Unit,
+    onNavigateToSearch: (String?) -> Unit,
     onNavigateToNotifications: () -> Unit,
     onNavigateToMessages: () -> Unit,
     onNavigateToProfile: () -> Unit,
@@ -168,7 +175,7 @@ fun HomeScreenContent(
     LaunchedEffect(isRefreshing) {
         if (isRefreshing) {
             onRefresh()
-            delay(1.seconds)
+            delay(500.milliseconds)
             isRefreshing = false
         }
     }
@@ -193,21 +200,21 @@ fun HomeScreenContent(
 
                 item {
                     PropertyOfTheDay(
-                        property = uiState.properties.firstOrNull(),
+                        property = uiState.featuredProperty,
                         onClick = onNavigateToDetail
                     )
                 }
 
                 item {
                     RealtyNovaSearchBar(
-                        onSearchClick = onNavigateToSearch,
+                        onSearchClick = { onNavigateToSearch(null) },
                         onAiClick = onNavigateToAiAssistant,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
                     )
                 }
 
                 item {
-                    LuxuryCategoriesRow(onNavigateToCountyExplorer)
+                    LuxuryCategoriesRow(onItemClick = onNavigateToSearch)
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
@@ -224,7 +231,7 @@ fun HomeScreenContent(
                     PremiumSectionHeader(
                         title = "Premium Collection",
                         subtitle = "Hand-picked luxury residences",
-                        onSeeAll = onNavigateToSearch
+                        onSeeAll = { onNavigateToSearch(null) }
                     )
                     PremiumProperties(
                         properties = uiState.properties.filter { it.isPremium },
@@ -238,7 +245,7 @@ fun HomeScreenContent(
                     PremiumSectionHeader(
                         title = "Curated Collections",
                         subtitle = "Specially selected for you",
-                        onSeeAll = onNavigateToSearch
+                        onSeeAll = { onNavigateToSearch(null) }
                     )
                     CuratedCollections()
                 }
@@ -256,7 +263,7 @@ fun HomeScreenContent(
                     PremiumSectionHeader(
                         title = "Exclusive Discovery",
                         subtitle = "Explore the best of Kenyan real estate",
-                        onSeeAll = onNavigateToSearch
+                        onSeeAll = { onNavigateToSearch(null) }
                     )
                 }
 
@@ -276,7 +283,7 @@ fun HomeScreenContent(
 
             DynamicPremiumHeader(
                 scrollState = scrollState,
-                onSearch = onNavigateToSearch,
+                onSearch = { onNavigateToSearch(null) },
                 onNotifications = onNavigateToNotifications,
                 onMessages = onNavigateToMessages,
                 onProfile = onNavigateToProfile
@@ -303,12 +310,12 @@ private fun MatchmakerHero(onClick: () -> Unit) {
 }
 
 @Composable
-fun LuxuryCategoriesRow(onItemClick: () -> Unit = {}) {
+fun LuxuryCategoriesRow(onItemClick: (String) -> Unit = {}) {
     val categories = listOf(
-        HomeCategory("Villas", R.drawable.img_43, "Lush living"),
-        HomeCategory("Urban", R.drawable.img_1, "City lights"),
-        HomeCategory("Coastal", R.drawable.img_33, "Ocean breeze"),
-        HomeCategory("Land", R.drawable.img_7, "Future build")
+        HomeCategory("Apartment", R.drawable.img_1, "Urban Living"),
+        HomeCategory("House", R.drawable.img_43, "Lush Mansionettes"),
+        HomeCategory("Land", R.drawable.img_7, "Prime Plots"),
+        HomeCategory("Commercial", R.drawable.img_33, "Business Hubs")
     )
     
     LazyRow(
@@ -318,7 +325,7 @@ fun LuxuryCategoriesRow(onItemClick: () -> Unit = {}) {
         items(categories) { category ->
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.width(90.dp).clickable { onItemClick() }
+                modifier = Modifier.width(90.dp).clickable { onItemClick(category.title) }
             ) {
                 Box(
                     modifier = Modifier
@@ -718,16 +725,12 @@ fun HeaderSmallButton(icon: ImageVector, onClick: () -> Unit, isScrolled: Boolea
 
 @Composable
 fun HomeLoadingState() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator(color = DeepEmerald, strokeWidth = 3.dp)
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "CURATING YOUR EXPERIENCE",
-                style = RealtyNovaTextStyles.PremiumLabel,
-                color = DeepEmerald,
-                letterSpacing = 2.sp
-            )
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = 220.dp, bottom = 32.dp)
+    ) {
+        items(5) {
+            PropertyCardShimmer()
         }
     }
 }

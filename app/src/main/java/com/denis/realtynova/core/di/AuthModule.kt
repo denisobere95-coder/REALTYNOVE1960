@@ -58,5 +58,10 @@ abstract class AuthModule {
         @Singleton
         fun provideFirebaseAnalytics(@dagger.hilt.android.qualifiers.ApplicationContext context: Context): com.google.firebase.analytics.FirebaseAnalytics = 
             com.google.firebase.analytics.FirebaseAnalytics.getInstance(context)
+
+        @Provides
+        @Singleton
+        fun provideFirebaseRemoteConfig(): com.google.firebase.remoteconfig.FirebaseRemoteConfig = 
+            com.google.firebase.remoteconfig.FirebaseRemoteConfig.getInstance()
     }
 }
